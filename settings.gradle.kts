@@ -17,3 +17,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "aws-credential-types-kotlin"
+
