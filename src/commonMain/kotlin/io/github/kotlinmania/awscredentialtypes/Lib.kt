@@ -1,4 +1,4 @@
-// port-lint: source src/lib.rs
+// port-lint: source lib.rs
 package io.github.kotlinmania.awscredentialtypes
 
 /*
@@ -15,7 +15,7 @@ package io.github.kotlinmania.awscredentialtypes
 //
 //   pub mod attributes;          → io.github.kotlinmania.awscredentialtypes.attributes
 //   pub mod credential_feature;  → io.github.kotlinmania.awscredentialtypes.credentialfeature
-//   pub mod credential_fn;       → not yet ported (depends on async closure support; deferred)
+//   pub mod credential_fn;       → io.github.kotlinmania.awscredentialtypes.credentialfn
 //   mod credentials_impl;        → flattened into io.github.kotlinmania.awscredentialtypes
 //   pub mod provider;            → io.github.kotlinmania.awscredentialtypes.provider
 //   pub mod token_fn;            → not yet ported (depends on Token)

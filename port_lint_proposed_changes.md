@@ -1,0 +1,24 @@
+# port-lint Proposed Changes
+
+**Generated:** 2026-05-20
+**Source:** tmp/aws-credential-types/src
+**Target:** src/commonMain/kotlin/io/github/kotlinmania/awscredentialtypes
+**Status:** Applied in this branch after generation; retained as run evidence.
+
+These are review proposals only. They are emitted when a Rust -> Kotlin pair matches only after fallback normalization, so the existing `port-lint` header is not an exact provenance match.
+
+| Target file | Current header | Proposed header | Source path | Reason |
+|-------------|----------------|-----------------|-------------|--------|
+| `src/commonMain/kotlin/io/github/kotlinmania/awscredentialtypes/provider/future/Future.kt` | `// port-lint: source src/provider/future.rs` | `// port-lint: source provider/future.rs` | `provider/future.rs` | `port-lint provenance header matched only after fallback normalization: 'src/provider/future.rs' vs expected 'provider/future.rs'` |
+| `src/commonMain/kotlin/io/github/kotlinmania/awscredentialtypes/provider/Credentials.kt` | `// port-lint: source src/provider/credentials.rs` | `// port-lint: source provider/credentials.rs` | `provider/credentials.rs` | `port-lint provenance header matched only after fallback normalization: 'src/provider/credentials.rs' vs expected 'provider/credentials.rs'` |
+| `src/commonTest/kotlin/io/github/kotlinmania/awscredentialtypes/provider/CredentialsTest.kt` | `// port-lint: source src/provider/credentials.rs` | `// port-lint: source provider/credentials.rs` | `provider/credentials.rs` | `port-lint provenance header matched only after fallback normalization: 'src/provider/credentials.rs' vs expected 'provider/credentials.rs'` |
+| `src/commonMain/kotlin/io/github/kotlinmania/awscredentialtypes/CredentialsImpl.kt` | `// port-lint: source src/credentials_impl.rs` | `// port-lint: source credentials_impl.rs` | `credentials_impl.rs` | `port-lint provenance header matched only after fallback normalization: 'src/credentials_impl.rs' vs expected 'credentials_impl.rs'` |
+| `src/commonTest/kotlin/io/github/kotlinmania/awscredentialtypes/CredentialsImplTest.kt` | `// port-lint: source src/credentials_impl.rs` | `// port-lint: source credentials_impl.rs` | `credentials_impl.rs` | `port-lint provenance header matched only after fallback normalization: 'src/credentials_impl.rs' vs expected 'credentials_impl.rs'` |
+| `src/commonMain/kotlin/io/github/kotlinmania/awscredentialtypes/credentialfn/CredentialFn.kt` | `// port-lint: source src/credential_fn.rs` | `// port-lint: source credential_fn.rs` | `credential_fn.rs` | `port-lint provenance header matched only after fallback normalization: 'src/credential_fn.rs' vs expected 'credential_fn.rs'` |
+| `src/commonTest/kotlin/io/github/kotlinmania/awscredentialtypes/credentialfn/CredentialFnTest.kt` | `// port-lint: source src/credential_fn.rs` | `// port-lint: source credential_fn.rs` | `credential_fn.rs` | `port-lint provenance header matched only after fallback normalization: 'src/credential_fn.rs' vs expected 'credential_fn.rs'` |
+| `src/commonMain/kotlin/io/github/kotlinmania/awscredentialtypes/provider/error/Error.kt` | `// port-lint: source src/provider/error.rs` | `// port-lint: source provider/error.rs` | `provider/error.rs` | `port-lint provenance header matched only after fallback normalization: 'src/provider/error.rs' vs expected 'provider/error.rs'` |
+| `src/commonMain/kotlin/io/github/kotlinmania/awscredentialtypes/credentialfeature/CredentialFeature.kt` | `// port-lint: source src/credential_feature.rs` | `// port-lint: source credential_feature.rs` | `credential_feature.rs` | `port-lint provenance header matched only after fallback normalization: 'src/credential_feature.rs' vs expected 'credential_feature.rs'` |
+| `src/commonMain/kotlin/io/github/kotlinmania/awscredentialtypes/Lib.kt` | `// port-lint: source src/lib.rs` | `// port-lint: source lib.rs` | `lib.rs` | `port-lint provenance header matched only after fallback normalization: 'src/lib.rs' vs expected 'lib.rs'` |
+| `src/commonMain/kotlin/io/github/kotlinmania/awscredentialtypes/attributes/Attributes.kt` | `// port-lint: source src/attributes.rs` | `// port-lint: source attributes.rs` | `attributes.rs` | `port-lint provenance header matched only after fallback normalization: 'src/attributes.rs' vs expected 'attributes.rs'` |
+| `src/commonTest/kotlin/io/github/kotlinmania/awscredentialtypes/attributes/AttributesTest.kt` | `// port-lint: source src/attributes.rs` | `// port-lint: source attributes.rs` | `attributes.rs` | `port-lint provenance header matched only after fallback normalization: 'src/attributes.rs' vs expected 'attributes.rs'` |
+| `src/commonMain/kotlin/io/github/kotlinmania/awscredentialtypes/provider/Mod.kt` | `// port-lint: source src/provider.rs` | `// port-lint: source provider.rs` | `provider.rs` | `port-lint provenance header matched only after fallback normalization: 'src/provider.rs' vs expected 'provider.rs'` |

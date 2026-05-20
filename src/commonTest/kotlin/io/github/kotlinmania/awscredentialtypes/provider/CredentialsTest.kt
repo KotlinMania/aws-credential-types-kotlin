@@ -1,4 +1,4 @@
-// port-lint: source src/provider/credentials.rs
+// port-lint: source provider/credentials.rs
 package io.github.kotlinmania.awscredentialtypes.provider
 
 import io.github.kotlinmania.awscredentialtypes.Credentials

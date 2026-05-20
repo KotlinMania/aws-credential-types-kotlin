@@ -1,4 +1,4 @@
-// port-lint: source src/credential_feature.rs
+// port-lint: source credential_feature.rs
 package io.github.kotlinmania.awscredentialtypes.credentialfeature
 
 /*
