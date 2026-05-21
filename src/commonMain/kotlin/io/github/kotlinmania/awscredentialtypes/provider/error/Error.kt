@@ -1,4 +1,4 @@
-// port-lint: source src/provider/error.rs
+// port-lint: source provider/error.rs
 package io.github.kotlinmania.awscredentialtypes.provider.error
 
 import kotlin.time.Duration

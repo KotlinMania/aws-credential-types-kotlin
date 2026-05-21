@@ -1,4 +1,4 @@
-// port-lint: source src/credentials_impl.rs
+// port-lint: source credentials_impl.rs
 package io.github.kotlinmania.awscredentialtypes
 
 import io.github.kotlinmania.awscredentialtypes.attributes.AccountId

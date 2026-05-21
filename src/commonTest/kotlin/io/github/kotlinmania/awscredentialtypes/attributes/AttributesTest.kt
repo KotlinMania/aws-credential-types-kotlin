@@ -1,4 +1,4 @@
-// port-lint: source src/attributes.rs
+// port-lint: source attributes.rs
 package io.github.kotlinmania.awscredentialtypes.attributes
 
 import kotlin.test.Test
