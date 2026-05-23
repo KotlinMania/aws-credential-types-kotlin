@@ -209,10 +209,18 @@ kotlin {
         binaries.framework { baseName = "AwsCredentialTypes"; xcf.add(this) }
     }
     iosSimulatorArm64 {
-        binaries.framework { baseName = "AwsCredentialTypes"; xcf.add(this) }
+        binaries.framework {
+            baseName = "AwsCredentialTypes"
+            isStatic = true
+            xcf.add(this)
+        }
     }
     iosX64 {
-        binaries.framework { baseName = "AwsCredentialTypes"; xcf.add(this) }
+        binaries.framework {
+            baseName = "AwsCredentialTypes"
+            isStatic = true
+            xcf.add(this)
+        }
     }
 
     tvosArm64 {
