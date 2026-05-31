@@ -27,14 +27,10 @@ package io.github.kotlinmania.awscredentialtypes.provider
 // [ProvideCredentials]. Generally, this is best done by defining an inherent suspend method on
 // your structure, then calling that method directly from the interface implementation.
 //
-// Tracking ledger for upstream re-exports out of `src/provider.rs`:
-//
-//   pub use credentials::{ProvideCredentials, Result, SharedCredentialsProvider};
-//
-// Defining Kotlin locations (no typealias bridge per repo policy):
-//   * [ProvideCredentials]        → io.github.kotlinmania.awscredentialtypes.provider.ProvideCredentials
-//   * [SharedCredentialsProvider] → io.github.kotlinmania.awscredentialtypes.provider.SharedCredentialsProvider
-//   * Result                      → kotlin.Result<Credentials>
-//
-// Callers migrated:
-//   (none yet — codex-kotlin has not been wired up at the time of this port)
+// Tracking ledger for the upstream provider module:
+// - credentials provider interface: io.github.kotlinmania.awscredentialtypes.provider.ProvideCredentials
+// - shared credentials provider: io.github.kotlinmania.awscredentialtypes.provider.SharedCredentialsProvider
+// - credentials result shape: kotlin.Result<Credentials>
+// - error module: io.github.kotlinmania.awscredentialtypes.provider.error
+// - future module: io.github.kotlinmania.awscredentialtypes.provider.future
+// - token module: io.github.kotlinmania.awscredentialtypes.provider.token
