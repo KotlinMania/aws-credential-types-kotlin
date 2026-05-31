@@ -2,19 +2,16 @@
 
 Based on AST analysis, here are the concrete next steps.
 
-Note: this report was generated before applying the provenance header corrections from
-`port_lint_proposed_changes.md`; provenance-warning rows may be stale in this branch.
-
 ## Summary
 
-- **Files Present:** 9/11 (81.8%)
-- **Function parity:** 37/76 matched (target 78) — 48.7%
-- **Class/type parity:** 17/29 matched (target 31) — 58.6%
-- **Combined symbol parity:** 54/105 matched (target 109) — 51.4%
-- **Average inline-code cosine:** 0.47 (function body across 7 matched files)
-- **Average documentation cosine:** 0.77 (doc text across 7 matched files)
-- **Cheat-zeroed Files:** 3
-- **Critical Issues:** 7 files with <0.60 function similarity
+- **Files Present:** 11/11 (100.0%)
+- **Function parity:** 45/75 matched (target 104) — 60.0%
+- **Class/type parity:** 23/29 matched (target 40) — 79.3%
+- **Combined symbol parity:** 68/104 matched (target 144) — 65.4%
+- **Average inline-code cosine:** 0.43 (function body across 10 matched files)
+- **Average documentation cosine:** 0.73 (doc text across 10 matched files)
+- **Cheat-zeroed Files:** 1
+- **Critical Issues:** 9 files with <0.60 function similarity
 
 ## Priority 1: Fix Incomplete High-Dependency Files
 
@@ -32,21 +29,18 @@ Every matched file is listed below with function and type symbol parity.
 
 ### 1. provider.future
 
-- **Target:** `future.Future [ZERO] [PROVENANCE-FALLBACK]`
-- **Similarity:** 0.00
+- **Target:** `future.Future`
+- **Similarity:** 0.34
 - **Dependents:** 2
-- **Priority Score:** 2040710.0
-- **Functions:** 2/3 matched (target 4)
+- **Priority Score:** 2030706.6
+- **Functions:** 2/3 matched (target 8)
 - **Missing functions:** `poll`
-- **Types:** 1/4 matched
-- **Missing types:** `BoxFuture`, `Output`, `ProvideToken`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `src/provider/future.rs` vs expected `provider/future.rs`
-- **Proposed provenance header:** `// port-lint: source provider/future.rs` (current: `// port-lint: source src/provider/future.rs`)
-- **Lint issues:** 1
+- **Types:** 2/4 matched (target 6)
+- **Missing types:** `BoxFuture`, `Output`
 
 ### 2. provider.credentials
 
-- **Target:** `provider.Credentials [PROVENANCE-FALLBACK]`
+- **Target:** `provider.Credentials`
 - **Similarity:** 0.14
 - **Dependents:** 1
 - **Priority Score:** 1081308.6
@@ -55,15 +49,22 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 2/4 matched (target 3)
 - **Missing types:** `Result`, `Storer`
 - **Tests:** 0/2 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `src/provider/credentials.rs` vs expected `provider/credentials.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `src/provider/credentials.rs` vs expected `provider/credentials.rs`
-- **Proposed provenance header:** `// port-lint: source provider/credentials.rs` (current: `// port-lint: source src/provider/credentials.rs`)
-- **Proposed provenance header:** `// port-lint: source provider/credentials.rs` (current: `// port-lint: source src/provider/credentials.rs`)
-- **Lint issues:** 2
 
-### 3. credentials_impl
+### 3. provider.token
 
-- **Target:** `awscredentialtypes.CredentialsImpl [PROVENANCE-FALLBACK]`
+- **Target:** `provider.Token`
+- **Similarity:** 0.33
+- **Dependents:** 1
+- **Priority Score:** 1021006.8
+- **Functions:** 5/7 matched (target 8)
+- **Missing functions:** `from`, `resolve_identity`
+- **Types:** 3/3 matched (target 4)
+- **Missing types:** _none_
+- **Tests:** 1/1 matched
+
+### 4. credentials_impl
+
+- **Target:** `awscredentialtypes.CredentialsImpl`
 - **Similarity:** 0.49
 - **Dependents:** 0
 - **Priority Score:** 103205.1
@@ -72,15 +73,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 3/4 matched (target 5)
 - **Missing types:** `Foo`
 - **Tests:** 2/4 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `src/credentials_impl.rs` vs expected `credentials_impl.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `src/credentials_impl.rs` vs expected `credentials_impl.rs`
-- **Proposed provenance header:** `// port-lint: source credentials_impl.rs` (current: `// port-lint: source src/credentials_impl.rs`)
-- **Proposed provenance header:** `// port-lint: source credentials_impl.rs` (current: `// port-lint: source src/credentials_impl.rs`)
-- **Lint issues:** 2
 
-### 4. credential_fn
+### 5. credential_fn
 
-- **Target:** `credentialfn.CredentialFn [PROVENANCE-FALLBACK]`
+- **Target:** `credentialfn.CredentialFn`
 - **Similarity:** 0.30
 - **Dependents:** 0
 - **Priority Score:** 50907.0
@@ -89,15 +85,22 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 1/1 matched (target 2)
 - **Missing types:** _none_
 - **Tests:** 1/5 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `src/credential_fn.rs` vs expected `credential_fn.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `src/credential_fn.rs` vs expected `credential_fn.rs`
-- **Proposed provenance header:** `// port-lint: source credential_fn.rs` (current: `// port-lint: source src/credential_fn.rs`)
-- **Proposed provenance header:** `// port-lint: source credential_fn.rs` (current: `// port-lint: source src/credential_fn.rs`)
-- **Lint issues:** 2
 
-### 5. provider.error
+### 6. token_fn
 
-- **Target:** `error.Error [PROVENANCE-FALLBACK]`
+- **Target:** `tokenfn.TokenFn`
+- **Similarity:** 0.31
+- **Dependents:** 0
+- **Priority Score:** 50906.9
+- **Functions:** 3/8 matched (target 6)
+- **Missing functions:** `fmt`, `assert_send_sync`, `creds_are_send_sync`, `check_is_str_ref`, `test_async_provider`
+- **Types:** 1/1 matched (target 2)
+- **Missing types:** _none_
+- **Tests:** 1/5 matched
+
+### 7. provider.error
+
+- **Target:** `error.Error`
 - **Similarity:** 0.52
 - **Dependents:** 0
 - **Priority Score:** 21704.8
@@ -105,13 +108,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing functions:** `fmt`, `source`
 - **Types:** 8/8 matched (target 14)
 - **Missing types:** _none_
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `src/provider/error.rs` vs expected `provider/error.rs`
-- **Proposed provenance header:** `// port-lint: source provider/error.rs` (current: `// port-lint: source src/provider/error.rs`)
-- **Lint issues:** 1
 
-### 6. credential_feature
+### 8. credential_feature
 
-- **Target:** `credentialfeature.CredentialFeature [PROVENANCE-FALLBACK]`
+- **Target:** `credentialfeature.CredentialFeature`
 - **Similarity:** 1.00
 - **Dependents:** 0
 - **Priority Score:** 10200.0
@@ -119,27 +119,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing functions:** _none_
 - **Types:** 1/2 matched (target 1)
 - **Missing types:** `Storer`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `src/credential_feature.rs` vs expected `credential_feature.rs`
-- **Proposed provenance header:** `// port-lint: source credential_feature.rs` (current: `// port-lint: source src/credential_feature.rs`)
-- **Lint issues:** 1
 
-### 7. lib
+### 9. attributes
 
-- **Target:** `awscredentialtypes.Lib [STUB] [PROVENANCE-FALLBACK]`
-- **Similarity:** 0.00
-- **Dependents:** 0
-- **Priority Score:** 10110.0
-- **Functions:** 0/0 matched
-- **Missing functions:** _none_
-- **Types:** 0/1 matched (target 0)
-- **Missing types:** `Token`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `src/lib.rs` vs expected `lib.rs`
-- **Proposed provenance header:** `// port-lint: source lib.rs` (current: `// port-lint: source src/lib.rs`)
-- **Lint issues:** 1
-
-### 8. attributes
-
-- **Target:** `attributes.Attributes [PROVENANCE-FALLBACK]`
+- **Target:** `attributes.Attributes`
 - **Similarity:** 0.86
 - **Dependents:** 0
 - **Priority Score:** 401.4
@@ -148,25 +131,28 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 1/1 matched (target 2)
 - **Missing types:** _none_
 - **Tests:** 1/1 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `src/attributes.rs` vs expected `attributes.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `src/attributes.rs` vs expected `attributes.rs`
-- **Proposed provenance header:** `// port-lint: source attributes.rs` (current: `// port-lint: source src/attributes.rs`)
-- **Proposed provenance header:** `// port-lint: source attributes.rs` (current: `// port-lint: source src/attributes.rs`)
-- **Lint issues:** 2
 
-### 9. provider
+### 10. lib
 
-- **Target:** `provider.Mod [STUB] [PROVENANCE-FALLBACK]`
+- **Target:** `awscredentialtypes.Lib [ZERO]`
 - **Similarity:** 0.00
 - **Dependents:** 0
-- **Priority Score:** 10.0
+- **Priority Score:** 110.0
+- **Functions:** 0/0 matched (target 8)
+- **Missing functions:** _none_
+- **Types:** 1/1 matched
+- **Missing types:** _none_
+
+### 11. provider
+
+- **Target:** `provider.Mod [STUB]`
+- **Similarity:** 1.00
+- **Dependents:** 0
+- **Priority Score:** 0.0
 - **Functions:** 0/0 matched
 - **Missing functions:** _none_
 - **Types:** 0/0 matched
 - **Missing types:** _none_
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `src/provider.rs` vs expected `provider.rs`
-- **Proposed provenance header:** `// port-lint: source provider.rs` (current: `// port-lint: source src/provider.rs`)
-- **Lint issues:** 1
 
 ## Success Criteria
 
@@ -176,8 +162,3 @@ For each file to be considered "complete":
 - All tests ported
 - Documentation ported
 - port-lint header present
-
-## Next Commands
-
-Run `ast_distance` only as a direct clean invocation from the repository root. Do not wrap,
-pipe, redirect, tail, or stack it behind shell control operators.
