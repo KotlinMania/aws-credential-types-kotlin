@@ -9,7 +9,9 @@ package io.github.kotlinmania.awscredentialtypes.attributes
 // Types representing specific pieces of data contained within credentials or within token
 
 /** Type representing a unique identifier representing an AWS account. */
-class AccountId private constructor(private val inner: String) {
+class AccountId private constructor(
+    private val inner: String,
+) {
     /** Return the string equivalent of this account id. */
     fun asStr(): String = inner
 

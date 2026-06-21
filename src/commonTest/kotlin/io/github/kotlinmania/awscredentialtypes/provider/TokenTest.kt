@@ -10,19 +10,21 @@ import kotlin.test.assertNotNull
 
 class TokenProviderTest {
     @Test
-    fun tokenImplementsProvideTokenDirectly() = runTest {
-        val token = Token.new("token", null)
-        val resolved = token.provideToken().await().getOrThrow()
-        assertEquals("token", resolved.token())
-    }
+    fun tokenImplementsProvideTokenDirectly() =
+        runTest {
+            val token = Token.new("token", null)
+            val resolved = token.provideToken().await().getOrThrow()
+            assertEquals("token", resolved.token())
+        }
 
     @Test
-    fun sharedTokenProviderForwardsToInner() = runTest {
-        val token = Token.new("token", null)
-        val provider = SharedTokenProvider.new(token)
-        val resolved = provider.provideToken().await().getOrThrow()
-        assertEquals("token", resolved.token())
-    }
+    fun sharedTokenProviderForwardsToInner() =
+        runTest {
+            val token = Token.new("token", null)
+            val provider = SharedTokenProvider.new(token)
+            val resolved = provider.provideToken().await().getOrThrow()
+            assertEquals("token", resolved.token())
+        }
 
     @Test
     fun reusesCachePartition() {

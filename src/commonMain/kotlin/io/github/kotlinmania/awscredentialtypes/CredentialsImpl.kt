@@ -3,9 +3,9 @@ package io.github.kotlinmania.awscredentialtypes
 
 import io.github.kotlinmania.awscredentialtypes.attributes.AccountId
 import io.github.kotlinmania.awscredentialtypes.provider.ProvideCredentials
-import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideCredentials as ProvideCredentialsFuture
 import kotlin.reflect.KClass
 import kotlin.time.Instant
+import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideCredentials as ProvideCredentialsFuture
 
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -48,13 +48,15 @@ class Credentials private constructor(
     ) {
         override fun equals(other: Any?): Boolean =
             this === other ||
-                (other is Inner &&
-                    accessKeyId == other.accessKeyId &&
-                    secretAccessKey == other.secretAccessKey &&
-                    sessionToken == other.sessionToken &&
-                    expiresAfter == other.expiresAfter &&
-                    accountId == other.accountId &&
-                    providerName == other.providerName)
+                (
+                    other is Inner &&
+                        accessKeyId == other.accessKeyId &&
+                        secretAccessKey == other.secretAccessKey &&
+                        sessionToken == other.sessionToken &&
+                        expiresAfter == other.expiresAfter &&
+                        accountId == other.accountId &&
+                        providerName == other.providerName
+                )
 
         override fun hashCode(): Int {
             var result = accessKeyId.hashCode()
@@ -211,12 +213,15 @@ class Credentials private constructor(
             )
 
         internal fun build(builder: CredentialsBuilder): Credentials {
-            val accessKeyId = builder.accessKeyId
-                ?: throw IllegalStateException("required field `access_key_id` missing")
-            val secretAccessKey = builder.secretAccessKey
-                ?: throw IllegalStateException("required field `secret_access_key` missing")
-            val providerName = builder.providerName
-                ?: throw IllegalStateException("required field `provider_name` missing")
+            val accessKeyId =
+                builder.accessKeyId
+                    ?: throw IllegalStateException("required field `access_key_id` missing")
+            val secretAccessKey =
+                builder.secretAccessKey
+                    ?: throw IllegalStateException("required field `secret_access_key` missing")
+            val providerName =
+                builder.providerName
+                    ?: throw IllegalStateException("required field `provider_name` missing")
             return Credentials(
                 Inner(
                     accessKeyId = accessKeyId,

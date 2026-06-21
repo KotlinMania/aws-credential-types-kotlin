@@ -1,9 +1,9 @@
 // port-lint: source lib.rs
 package io.github.kotlinmania.awscredentialtypes
 
-import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideToken as ProvideTokenFuture
 import io.github.kotlinmania.awscredentialtypes.provider.token.ProvideToken
 import kotlin.time.Instant
+import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideToken as ProvideTokenFuture
 
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -36,9 +36,11 @@ class Token private constructor(
 
     override fun equals(other: Any?): Boolean =
         this === other ||
-            (other is Token &&
-                token == other.token &&
-                expiresAfter == other.expiresAfter)
+            (
+                other is Token &&
+                    token == other.token &&
+                    expiresAfter == other.expiresAfter
+            )
 
     override fun hashCode(): Int {
         var result = token.hashCode()

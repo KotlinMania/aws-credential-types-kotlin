@@ -1,8 +1,8 @@
 // port-lint: source token_fn.rs
 package io.github.kotlinmania.awscredentialtypes.tokenfn
 
-import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideToken as ProvideTokenFuture
 import io.github.kotlinmania.awscredentialtypes.provider.token.ProvideToken
+import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideToken as ProvideTokenFuture
 import io.github.kotlinmania.awscredentialtypes.provider.token.Result as TokenResult
 
 /*

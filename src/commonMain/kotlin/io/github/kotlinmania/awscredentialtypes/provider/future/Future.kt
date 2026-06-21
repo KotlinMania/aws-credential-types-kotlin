@@ -14,9 +14,13 @@ import io.github.kotlinmania.awscredentialtypes.provider.token.Result as TokenRe
 // newtype.
 
 private sealed interface CredentialsState {
-    data class Ready(val value: Result<Credentials>) : CredentialsState
+    data class Ready(
+        val value: Result<Credentials>,
+    ) : CredentialsState
 
-    class Pending(val producer: suspend () -> Result<Credentials>) : CredentialsState
+    class Pending(
+        val producer: suspend () -> Result<Credentials>,
+    ) : CredentialsState
 }
 
 /** Holder that [ProvideCredentials.provideCredentials] must return. */
@@ -44,9 +48,13 @@ class ProvideCredentials private constructor(
 }
 
 private sealed interface TokenState {
-    data class Ready(val value: TokenResult) : TokenState
+    data class Ready(
+        val value: TokenResult,
+    ) : TokenState
 
-    class Pending(val producer: suspend () -> TokenResult) : TokenState
+    class Pending(
+        val producer: suspend () -> TokenResult,
+    ) : TokenState
 }
 
 /** Holder that [io.github.kotlinmania.awscredentialtypes.provider.token.ProvideToken.provideToken] must return. */
