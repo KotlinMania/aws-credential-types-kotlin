@@ -34,3 +34,5 @@ package io.github.kotlinmania.awscredentialtypes.provider
 // - error module: io.github.kotlinmania.awscredentialtypes.provider.error
 // - future module: io.github.kotlinmania.awscredentialtypes.provider.future
 // - token module: io.github.kotlinmania.awscredentialtypes.provider.token
+
+internal object Mod
