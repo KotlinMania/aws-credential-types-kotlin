@@ -9,6 +9,12 @@ import io.github.kotlinmania.awscredentialtypes.provider.token.Result as TokenRe
 
 class TokenFnTest {
     @Test
+    fun tokensAreSendSync() {
+        val token = Token.new("token", null)
+        assertEquals("token", token.token())
+    }
+
+    @Test
     fun provideTokenFnClosureCanBorrow() =
         runTest {
             fun checkIsString(input: String) {

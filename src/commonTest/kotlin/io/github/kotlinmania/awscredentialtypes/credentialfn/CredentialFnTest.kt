@@ -8,6 +8,12 @@ import kotlin.test.assertEquals
 
 class CredentialFnTest {
     @Test
+    fun credsAreSendSync() {
+        val creds = Credentials.forTests()
+        assertEquals("ANOTREAL", creds.accessKeyId())
+    }
+
+    @Test
     fun provideCredentialsFnClosureCanBorrow() =
         runTest {
             fun checkIsString(input: String) {

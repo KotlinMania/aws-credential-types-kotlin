@@ -172,6 +172,26 @@ class Credentials private constructor(
             )
 
         /**
+         * Creates [Credentials].
+         *
+         * Alias for [create] matching upstream Rust `Credentials::new`.
+         */
+        fun new(
+            accessKeyId: String,
+            secretAccessKey: String,
+            sessionToken: String?,
+            expiresAfter: Instant?,
+            providerName: String,
+        ): Credentials =
+            create(
+                accessKeyId = accessKeyId,
+                secretAccessKey = secretAccessKey,
+                sessionToken = sessionToken,
+                expiresAfter = expiresAfter,
+                providerName = providerName,
+            )
+
+        /**
          * Creates [Credentials] from hardcoded access key, secret key, and session token.
          *
          * _Note: In general, you should prefer to use the credential providers that come
