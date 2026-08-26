@@ -56,6 +56,8 @@ interface ProvideCredentials {
 class SharedCredentialsProvider(
     private val provider: ProvideCredentials,
 ) : ProvideCredentials {
+    private val cachePartition = Any()
+
     /** Returns the underlying provider. */
     fun asRef(): ProvideCredentials = provider
 
@@ -63,5 +65,16 @@ class SharedCredentialsProvider(
 
     override fun fallbackOnInterrupt(): Credentials? = provider.fallbackOnInterrupt()
 
+    /** Returns the stable cache partition associated with this provider. */
+    fun cachePartition(): Any = cachePartition
+
     override fun toString(): String = "SharedCredentialsProvider"
+
+    companion object {
+        /** Creates a new [SharedCredentialsProvider] from [ProvideCredentials]. */
+        fun new(provider: ProvideCredentials): SharedCredentialsProvider = SharedCredentialsProvider(provider)
+
+        /** Creates a [SharedCredentialsProvider] from [ProvideCredentials]. */
+        fun from(provider: ProvideCredentials): SharedCredentialsProvider = SharedCredentialsProvider(provider)
+    }
 }

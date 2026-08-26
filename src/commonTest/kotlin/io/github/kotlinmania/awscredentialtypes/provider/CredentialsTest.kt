@@ -5,6 +5,7 @@ import io.github.kotlinmania.awscredentialtypes.Credentials
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class CredentialsProviderTest {
@@ -27,5 +28,32 @@ class CredentialsProviderTest {
             val resolved = creds.provideCredentials().await()
             assertEquals("AKID2", resolved.getOrThrow().accessKeyId())
             assertEquals("session", resolved.getOrThrow().sessionToken())
+        }
+
+    @Test
+    fun reusesCachePartition() {
+        val creds = Credentials.new("AKID", "SECRET", null, null, "test")
+        val provider = SharedCredentialsProvider.new(creds)
+        val partition = provider.cachePartition()
+        assertNotNull(partition)
+        assertEquals(partition, provider.cachePartition())
+    }
+
+    @Test
+    fun accountIdCanBeRetrievedFromIdentity() =
+        runTest {
+            val expectedAccountId = "012345678901"
+            val creds =
+                Credentials.builder()
+                    .accessKeyId("AKID")
+                    .secretAccessKey("SECRET")
+                    .accountId(expectedAccountId)
+                    .providerName("test")
+                    .build()
+            val provider = SharedCredentialsProvider.new(creds)
+            val identity = provider.provideCredentials().await().getOrThrow()
+            val actual = identity.accountId()
+            assertNotNull(actual)
+            assertEquals(expectedAccountId, actual.asStr())
         }
 }

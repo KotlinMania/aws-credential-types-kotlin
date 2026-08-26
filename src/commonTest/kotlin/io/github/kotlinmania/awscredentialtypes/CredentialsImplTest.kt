@@ -62,6 +62,31 @@ class CredentialsImplTest {
         assertEquals(newExpiry, creds.expiry())
     }
 
+    @Test
+    fun identityInheritsFeatureProperties() {
+        val creds = Credentials.forTestsWithSessionToken()
+        val featureProps =
+            listOf(
+                AwsCredentialFeature.CREDENTIALS_CODE,
+                AwsCredentialFeature.CREDENTIALS_STS_SESSION_TOKEN,
+            )
+        creds.setProperty(featureProps)
+        val retrieved = creds.getProperty<List<AwsCredentialFeature>>()
+        assertEquals(featureProps, retrieved)
+    }
+
+    @Test
+    fun fromCredentialsAddsResolvedAccountIdFeature() {
+        val creds =
+            Credentials.builder()
+                .accessKeyId("test")
+                .secretAccessKey("test")
+                .accountId("123456789012")
+                .providerName("test")
+                .build()
+        assertEquals("123456789012", creds.accountId()?.asStr())
+    }
+
     private data class SomeOtherProp(
         val value: String,
     )

@@ -9,5 +9,6 @@ class AttributesTest {
     fun accountIdCreation() {
         val expected = "012345678901"
         assertEquals(expected, AccountId.from(expected).asStr())
+        assertEquals(expected, AccountId.from(buildString { append(expected) }).asStr())
     }
 }
