@@ -1,4 +1,4 @@
-// port-lint: source credential_fn.rs
+// port-lint: tests credential_fn.rs
 package io.github.kotlinmania.awscredentialtypes.credentialfn
 
 import io.github.kotlinmania.awscredentialtypes.Credentials
