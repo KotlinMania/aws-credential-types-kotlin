@@ -1,4 +1,4 @@
-// port-lint: source token_fn.rs
+// port-lint: tests token_fn.rs
 package io.github.kotlinmania.awscredentialtypes.tokenfn
 
 import io.github.kotlinmania.awscredentialtypes.Token

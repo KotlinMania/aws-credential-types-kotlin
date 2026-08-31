@@ -1,4 +1,4 @@
-// port-lint: source provider/token.rs
+// port-lint: tests provider/token.rs
 package io.github.kotlinmania.awscredentialtypes.provider
 
 import io.github.kotlinmania.awscredentialtypes.Token
