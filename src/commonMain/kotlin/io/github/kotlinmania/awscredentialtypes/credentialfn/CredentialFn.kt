@@ -24,6 +24,9 @@ class ProvideCredentialsFn internal constructor(
         ProvideCredentialsFuture.new { provider() }
 
     override fun toString(): String = "ProvideCredentialsFn"
+
+    /** Formats the provider for debugging, mirroring upstream Debug::fmt. */
+    fun fmt(): String = toString()
 }
 
 /**

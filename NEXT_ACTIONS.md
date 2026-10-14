@@ -5,9 +5,9 @@ Based on AST analysis, here are the concrete next steps.
 ## Summary
 
 - **Files Present:** 11/11 (100.0%)
-- **Function parity:** 77/95 matched (target 126) — 81.1%
+- **Function parity:** 79/95 matched (target 132) — 83.2%
 - **Class/type parity:** 27/29 matched (target 45) — 93.1%
-- **Combined symbol parity:** 104/124 matched (target 171) — 83.9%
+- **Combined symbol parity:** 106/124 matched (target 177) — 85.5%
 - **Average inline-code cosine:** 0.31 (function body across 11 matched files)
 - **Average documentation cosine:** 0.65 (doc text across 11 matched files)
 - **Cheat-zeroed Files:** 1
@@ -64,31 +64,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing types:** _none_
 - **Tests:** 1/1 matched
 
-### 4. credential_fn
-
-- **Target:** `credentialfn.CredentialFn`
-- **Similarity:** 0.23
-- **Dependents:** 0
-- **Priority Score:** 40907.7
-- **Functions:** 4/8 matched
-- **Missing functions:** `fmt`, `assert_send_sync`, `check_is_str_ref`, `test_async_provider`
-- **Types:** 1/1 matched (target 2)
-- **Missing types:** _none_
-- **Tests:** 2/5 matched
-
-### 5. token_fn
-
-- **Target:** `tokenfn.TokenFn`
-- **Similarity:** 0.25
-- **Dependents:** 0
-- **Priority Score:** 40907.5
-- **Functions:** 4/8 matched (target 9)
-- **Missing functions:** `fmt`, `assert_send_sync`, `check_is_str_ref`, `test_async_provider`
-- **Types:** 1/1 matched (target 2)
-- **Missing types:** _none_
-- **Tests:** 2/5 matched
-
-### 6. credentials_impl
+### 4. credentials_impl
 
 - **Target:** `awscredentialtypes.CredentialsImpl`
 - **Similarity:** 0.19
@@ -99,6 +75,30 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 4/4 matched (target 5)
 - **Missing types:** _none_
 - **Tests:** 4/4 matched
+
+### 5. credential_fn
+
+- **Target:** `credentialfn.CredentialFn`
+- **Similarity:** 0.23
+- **Dependents:** 0
+- **Priority Score:** 30907.7
+- **Functions:** 5/8 matched (target 11)
+- **Missing functions:** `assert_send_sync`, `check_is_str_ref`, `test_async_provider`
+- **Types:** 1/1 matched (target 2)
+- **Missing types:** _none_
+- **Tests:** 2/5 matched
+
+### 6. token_fn
+
+- **Target:** `tokenfn.TokenFn`
+- **Similarity:** 0.25
+- **Dependents:** 0
+- **Priority Score:** 30907.5
+- **Functions:** 5/8 matched (target 12)
+- **Missing functions:** `assert_send_sync`, `check_is_str_ref`, `test_async_provider`
+- **Types:** 1/1 matched (target 2)
+- **Missing types:** _none_
+- **Tests:** 2/5 matched
 
 ### 7. provider.error
 

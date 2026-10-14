@@ -16,51 +16,62 @@ private fun checkIsStrRef(input: String) {
 private suspend fun testAsyncProvider(input: String): TokenResult =
     Result.success(Token.new(input, null))
 
+fun credsAreSendSync() {
+    assertSendSync<Token>()
+    val token = Token.new("token", null)
+    assertEquals("token", token.token())
+}
+
+suspend fun provideTokenFnClosureCanBorrow() {
+    val thingsToBorrow = listOf("one", "two")
+    val providers = mutableListOf<ProvideTokenFn>()
+
+    for (thing in thingsToBorrow) {
+        val provider =
+            provideTokenFn {
+                checkIsStrRef(thing)
+                testAsyncProvider(thing)
+            }
+        providers += provider
+    }
+
+    val two = providers.removeLast()
+    val one = providers.removeLast()
+    assertEquals(
+        "one",
+        one
+            .provideToken()
+            .await()
+            .getOrThrow()
+            .token(),
+    )
+    assertEquals(
+        "two",
+        two
+            .provideToken()
+            .await()
+            .getOrThrow()
+            .token(),
+    )
+}
+
 class TokenFnTest {
     @Test
     fun credsAreSendSync() {
-        assertSendSync<Token>()
-        val token = Token.new("token", null)
-        assertEquals("token", token.token())
+        io.github.kotlinmania.awscredentialtypes.tokenfn
+            .credsAreSendSync()
     }
 
     @Test
     fun tokensAreSendSync() {
-        credsAreSendSync()
+        io.github.kotlinmania.awscredentialtypes.tokenfn
+            .credsAreSendSync()
     }
 
     @Test
     fun provideTokenFnClosureCanBorrow() =
         runTest {
-            val thingsToBorrow = listOf("one", "two")
-            val providers = mutableListOf<ProvideTokenFn>()
-
-            for (thing in thingsToBorrow) {
-                val provider =
-                    provideTokenFn {
-                        checkIsStrRef(thing)
-                        testAsyncProvider(thing)
-                    }
-                providers += provider
-            }
-
-            val two = providers.removeLast()
-            val one = providers.removeLast()
-            assertEquals(
-                "one",
-                one
-                    .provideToken()
-                    .await()
-                    .getOrThrow()
-                    .token(),
-            )
-            assertEquals(
-                "two",
-                two
-                    .provideToken()
-                    .await()
-                    .getOrThrow()
-                    .token(),
-            )
+            io.github.kotlinmania.awscredentialtypes.tokenfn
+                .provideTokenFnClosureCanBorrow()
         }
 }
