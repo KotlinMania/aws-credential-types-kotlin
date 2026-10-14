@@ -30,6 +30,9 @@ import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideCredentia
 // [ProvideCredentials]. Generally, this is best done by defining an inherent suspend method on
 // your structure, then calling that method directly from the interface implementation.
 
+/** Result type for credentials providers. */
+typealias Result = kotlin.Result<Credentials>
+
 /** Asynchronous Credentials Provider */
 interface ProvideCredentials {
     /** Returns a holder that yields credentials. */

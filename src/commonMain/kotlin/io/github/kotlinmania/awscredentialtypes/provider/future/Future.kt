@@ -13,6 +13,9 @@ import io.github.kotlinmania.awscredentialtypes.provider.token.Result as TokenRe
 // producer. Returned from ProvideCredentials.provideCredentials in mirror of the upstream future
 // newtype.
 
+/** Boxed asynchronous producer mirroring upstream `BoxFuture`. */
+typealias BoxFuture<T> = suspend () -> T
+
 private sealed interface CredentialsState {
     data class Ready(
         val value: Result<Credentials>,
@@ -33,6 +36,13 @@ class ProvideCredentials private constructor(
             is CredentialsState.Ready -> s.value
             is CredentialsState.Pending -> s.producer()
         }
+
+    /**
+     * Polls the underlying credentials result.
+     *
+     * In Kotlin coroutines, this delegates to [await].
+     */
+    suspend fun poll(): Result<Credentials> = await()
 
     override fun toString(): String = "ProvideCredentials"
 
@@ -67,6 +77,13 @@ class ProvideToken private constructor(
             is TokenState.Ready -> s.value
             is TokenState.Pending -> s.producer()
         }
+
+    /**
+     * Polls the underlying token result.
+     *
+     * In Kotlin coroutines, this delegates to [await].
+     */
+    suspend fun poll(): TokenResult = await()
 
     override fun toString(): String = "ProvideToken"
 

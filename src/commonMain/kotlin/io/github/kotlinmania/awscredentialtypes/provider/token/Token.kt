@@ -49,5 +49,8 @@ class SharedTokenProvider(
     companion object {
         /** Create a new [SharedTokenProvider] from [ProvideToken]. */
         fun new(provider: ProvideToken): SharedTokenProvider = SharedTokenProvider(provider)
+
+        /** Creates a [SharedTokenProvider] from [ProvideToken]. */
+        fun from(provider: ProvideToken): SharedTokenProvider = SharedTokenProvider(provider)
     }
 }

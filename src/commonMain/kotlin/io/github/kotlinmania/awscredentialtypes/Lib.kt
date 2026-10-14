@@ -28,6 +28,9 @@ class Token private constructor(
     /** Returns the instant when the token expires, when one is available. */
     fun expiration(): Instant? = expiresAfter
 
+    /** Returns the instant when the token expires, matching [expiration]. */
+    fun expiresAfter(): Instant? = expiresAfter
+
     /** Returns an equivalent token value. */
     fun clone(): Token = Token(token, expiresAfter)
 

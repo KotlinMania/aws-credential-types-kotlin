@@ -7,8 +7,11 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class CredentialFnTest {
+    private fun <T> assertSendSync() {}
+
     @Test
     fun credsAreSendSync() {
+        assertSendSync<Credentials>()
         val creds = Credentials.forTests()
         assertEquals("ANOTREAL", creds.accessKeyId())
     }
@@ -16,7 +19,7 @@ class CredentialFnTest {
     @Test
     fun provideCredentialsFnClosureCanBorrow() =
         runTest {
-            fun checkIsString(input: String) {
+            fun checkIsStrRef(input: String) {
                 assertEquals(input, input)
             }
 
@@ -29,7 +32,7 @@ class CredentialFnTest {
             for (thing in thingsToBorrow) {
                 val provider =
                     provideCredentialsFn {
-                        checkIsString(thing)
+                        checkIsStrRef(thing)
                         testAsyncProvider(thing)
                     }
                 providers += provider
