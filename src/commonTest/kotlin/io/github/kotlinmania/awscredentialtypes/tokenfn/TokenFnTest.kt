@@ -7,30 +7,38 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import io.github.kotlinmania.awscredentialtypes.provider.token.Result as TokenResult
 
+private fun <T> assertSendSync() {}
+
+private fun checkIsStrRef(input: String) {
+    assertEquals(input, input)
+}
+
+private suspend fun testAsyncProvider(input: String): TokenResult =
+    Result.success(Token.new(input, null))
+
 class TokenFnTest {
     @Test
-    fun tokensAreSendSync() {
+    fun credsAreSendSync() {
+        assertSendSync<Token>()
         val token = Token.new("token", null)
         assertEquals("token", token.token())
     }
 
     @Test
+    fun tokensAreSendSync() {
+        credsAreSendSync()
+    }
+
+    @Test
     fun provideTokenFnClosureCanBorrow() =
         runTest {
-            fun checkIsString(input: String) {
-                assertEquals(input, input)
-            }
-
-            suspend fun testAsyncProvider(input: String): TokenResult =
-                Result.success(Token.new(input, null))
-
             val thingsToBorrow = listOf("one", "two")
             val providers = mutableListOf<ProvideTokenFn>()
 
             for (thing in thingsToBorrow) {
                 val provider =
                     provideTokenFn {
-                        checkIsString(thing)
+                        checkIsStrRef(thing)
                         testAsyncProvider(thing)
                     }
                 providers += provider

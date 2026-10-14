@@ -106,6 +106,9 @@ class Credentials private constructor(
     /** Returns the time when the credentials will expire. */
     fun expiry(): Instant? = inner.expiresAfter
 
+    /** Returns the time when the credentials will expire. */
+    fun expiryMut(): Instant? = inner.expiresAfter
+
     /** Sets the time when the credentials will expire. */
     fun setExpiry(expiry: Instant?) {
         inner.expiresAfter = expiry
@@ -125,6 +128,9 @@ class Credentials private constructor(
     /** Returns arbitrary property associated with these [Credentials]. */
     inline fun <reified T : Any> getProperty(): T? = properties[T::class] as? T
 
+    /** Attempts to retrieve a property of a given type [T]. */
+    inline fun <reified T : Any> getPropertyMut(): T? = getProperty<T>()
+
     /**
      * Returns a property of a given type [T] if it is stored on these [Credentials],
      * otherwise stores and returns the value produced by [default].
@@ -139,6 +145,12 @@ class Credentials private constructor(
         properties[key] = created
         return created
     }
+
+    /**
+     * Returns a property of a given type [T] if it is stored on these [Credentials],
+     * otherwise stores and returns the value produced by [default].
+     */
+    inline fun <reified T : Any> getPropertyMutOrDefault(default: () -> T): T = getPropertyOrDefault(default)
 
     companion object {
         private const val STATIC_CREDENTIALS: String = "Static"

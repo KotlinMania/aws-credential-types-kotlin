@@ -100,6 +100,9 @@ sealed class CredentialsError(
         val details: UnhandledDetails,
     ) : CredentialsError("unexpected credentials error", details.source)
 
+    /** Returns the underlying cause of this error, mirroring upstream `Error::source`. */
+    fun source(): Throwable? = cause
+
     companion object {
         /**
          * The credentials provider did not provide credentials
@@ -200,6 +203,9 @@ sealed class TokenError(
     class Unhandled internal constructor(
         val details: UnhandledDetails,
     ) : TokenError("unexpected access token providererror", details.source)
+
+    /** Returns the underlying cause of this error, mirroring upstream `Error::source`. */
+    fun source(): Throwable? = cause
 
     companion object {
         /**
