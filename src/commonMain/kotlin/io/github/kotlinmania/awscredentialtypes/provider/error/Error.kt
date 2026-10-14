@@ -17,6 +17,9 @@ class CredentialsNotLoadedDetails internal constructor(
     override fun toString(): String = "CredentialsNotLoaded(source=$source)"
 }
 
+/** Mirror of upstream `CredentialsNotLoaded` detail struct. */
+typealias CredentialsNotLoaded = CredentialsNotLoadedDetails
+
 /** Details for [CredentialsError.ProviderTimedOut] or [TokenError.ProviderTimedOut] */
 class ProviderTimedOutDetails internal constructor(
     private val timeoutDuration: Duration,
@@ -27,12 +30,18 @@ class ProviderTimedOutDetails internal constructor(
     override fun toString(): String = "ProviderTimedOut(timeoutDuration=$timeoutDuration)"
 }
 
+/** Mirror of upstream `ProviderTimedOut` detail struct. */
+typealias ProviderTimedOut = ProviderTimedOutDetails
+
 /** Details for [CredentialsError.InvalidConfiguration] or [TokenError.InvalidConfiguration] */
 class InvalidConfigurationDetails internal constructor(
     internal val source: Throwable,
 ) {
     override fun toString(): String = "InvalidConfiguration(source=$source)"
 }
+
+/** Mirror of upstream `InvalidConfiguration` detail struct. */
+typealias InvalidConfiguration = InvalidConfigurationDetails
 
 /** Details for [CredentialsError.ProviderError] or [TokenError.ProviderError] */
 class ProviderErrorDetails internal constructor(
@@ -41,12 +50,18 @@ class ProviderErrorDetails internal constructor(
     override fun toString(): String = "ProviderError(source=$source)"
 }
 
+/** Mirror of upstream `ProviderError` detail struct. */
+typealias ProviderError = ProviderErrorDetails
+
 /** Details for [CredentialsError.Unhandled] or [TokenError.Unhandled] */
 class UnhandledDetails internal constructor(
     internal val source: Throwable,
 ) {
     override fun toString(): String = "Unhandled(source=$source)"
 }
+
+/** Mirror of upstream `Unhandled` detail struct. */
+typealias Unhandled = UnhandledDetails
 
 /** Error returned when credentials failed to load. */
 sealed class CredentialsError(
@@ -158,6 +173,9 @@ class TokenNotLoadedDetails internal constructor(
 ) {
     override fun toString(): String = "TokenNotLoaded(source=$source)"
 }
+
+/** Mirror of upstream `TokenNotLoaded` detail struct. */
+typealias TokenNotLoaded = TokenNotLoadedDetails
 
 /** Error returned when an access token provider fails to provide an access token. */
 sealed class TokenError(
