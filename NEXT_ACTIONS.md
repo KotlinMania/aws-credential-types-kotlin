@@ -6,10 +6,10 @@ Based on AST analysis, here are the concrete next steps.
 
 - **Files Present:** 11/11 (100.0%)
 - **Function parity:** 79/95 matched (target 132) — 83.2%
-- **Class/type parity:** 27/29 matched (target 45) — 93.1%
-- **Combined symbol parity:** 106/124 matched (target 177) — 85.5%
+- **Class/type parity:** 29/29 matched (target 47) — 100.0%
+- **Combined symbol parity:** 108/124 matched (target 179) — 87.1%
 - **Average inline-code cosine:** 0.31 (function body across 11 matched files)
-- **Average documentation cosine:** 0.65 (doc text across 11 matched files)
+- **Average documentation cosine:** 0.64 (doc text across 11 matched files)
 - **Cheat-zeroed Files:** 1
 - **Critical Issues:** 9 files with <0.60 function similarity
 - **Needs Review:** 0 files with 0.60-0.84 function similarity
@@ -45,11 +45,11 @@ Every matched file is listed below with function and type symbol parity.
 - **Target:** `provider.Credentials`
 - **Similarity:** 0.13
 - **Dependents:** 1
-- **Priority Score:** 1041608.8
+- **Priority Score:** 1031608.8
 - **Functions:** 9/12 matched
 - **Missing functions:** `provide_credentials`, `provide_credentials`, `resolve_identity`
-- **Types:** 3/4 matched
-- **Missing types:** `Storer`
+- **Types:** 4/4 matched (target 5)
+- **Missing types:** _none_
 - **Tests:** 2/2 matched
 
 ### 3. provider.token
@@ -111,18 +111,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 8/8 matched (target 14)
 - **Missing types:** _none_
 
-### 8. credential_feature
-
-- **Target:** `credentialfeature.CredentialFeature`
-- **Similarity:** 1.00
-- **Dependents:** 0
-- **Priority Score:** 10200.0
-- **Functions:** 0/0 matched
-- **Missing functions:** _none_
-- **Types:** 1/2 matched (target 1)
-- **Missing types:** `Storer`
-
-### 9. attributes
+### 8. attributes
 
 - **Target:** `attributes.Attributes`
 - **Similarity:** 0.21
@@ -133,6 +122,17 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 1/1 matched (target 2)
 - **Missing types:** _none_
 - **Tests:** 1/1 matched
+
+### 9. credential_feature
+
+- **Target:** `credentialfeature.CredentialFeature`
+- **Similarity:** 1.00
+- **Dependents:** 0
+- **Priority Score:** 200.0
+- **Functions:** 0/0 matched
+- **Missing functions:** _none_
+- **Types:** 2/2 matched
+- **Missing types:** _none_
 
 ### 10. lib
 

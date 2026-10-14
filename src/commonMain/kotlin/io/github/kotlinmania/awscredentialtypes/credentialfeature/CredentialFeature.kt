@@ -77,3 +77,6 @@ enum class AwsCredentialFeature {
     /** An operation called using credentials resolved from a LoginCredentialsProvider configured explicitly via code */
     CREDENTIALS_LOGIN,
 }
+
+/** Storer type for [AwsCredentialFeature] mirroring upstream `Storable::Storer = StoreAppend<Self>`. */
+typealias Storer = List<AwsCredentialFeature>

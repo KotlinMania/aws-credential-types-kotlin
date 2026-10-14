@@ -81,3 +81,6 @@ class SharedCredentialsProvider(
         fun from(provider: ProvideCredentials): SharedCredentialsProvider = SharedCredentialsProvider(provider)
     }
 }
+
+/** Storer type for [SharedCredentialsProvider] mirroring upstream `Storable::Storer = StoreReplace<SharedCredentialsProvider>`. */
+typealias Storer = SharedCredentialsProvider
