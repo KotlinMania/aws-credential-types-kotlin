@@ -44,7 +44,8 @@ class CredentialsProviderTest {
         runTest {
             val expectedAccountId = "012345678901"
             val creds =
-                Credentials.builder()
+                Credentials
+                    .builder()
                     .accessKeyId("AKID")
                     .secretAccessKey("SECRET")
                     .accountId(expectedAccountId)

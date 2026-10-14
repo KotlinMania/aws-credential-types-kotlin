@@ -1,6 +1,6 @@
 # port-lint Proposed Changes
 
-**Generated:** 2026-08-30
+**Generated:** 2026-10-14
 **Source:** tmp/aws-credential-types/src
 **Target:** src/commonMain/kotlin
 
