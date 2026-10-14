@@ -49,7 +49,7 @@ class Token private constructor(
     }
 
     override fun toString(): String {
-        val expiry = expiresAfter?.let { ", expires_after: \"$it\"" } ?: ""
+        val expiry = expiresAfter?.let { ", expires_after: \"$it\"" }.orEmpty()
         return "Token { token: \"** redacted **\"$expiry }"
     }
 
