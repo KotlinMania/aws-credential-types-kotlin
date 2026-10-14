@@ -1,6 +1,7 @@
 // port-lint: source provider/token.rs
 package io.github.kotlinmania.awscredentialtypes.provider.token
 
+import io.github.kotlinmania.awscredentialtypes.Identity
 import io.github.kotlinmania.awscredentialtypes.Token
 import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideToken as ProvideTokenFuture
 
@@ -40,6 +41,10 @@ class SharedTokenProvider(
     fun asRef(): ProvideToken = provider
 
     override fun provideToken(): ProvideTokenFuture = provider.provideToken()
+
+    /** Resolves the identity from this token provider, mirroring upstream ResolveIdentity. */
+    suspend fun resolveIdentity(): kotlin.Result<Identity> =
+        provideToken().await().map { it.toIdentity() }
 
     /** Returns the stable cache partition associated with this provider. */
     fun cachePartition(): Any = cachePartition

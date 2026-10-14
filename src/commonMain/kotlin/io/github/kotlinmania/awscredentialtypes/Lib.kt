@@ -34,6 +34,13 @@ class Token private constructor(
     /** Returns an equivalent token value. */
     fun clone(): Token = Token(token, expiresAfter)
 
+    /** Converts this token to an [Identity]. */
+    fun toIdentity(): Identity =
+        Identity(
+            data = this,
+            expiration = expiresAfter,
+        )
+
     override fun provideToken(): ProvideTokenFuture =
         ProvideTokenFuture.ready(Result.success(clone()))
 

@@ -2,6 +2,7 @@
 package io.github.kotlinmania.awscredentialtypes.provider
 
 import io.github.kotlinmania.awscredentialtypes.Credentials
+import io.github.kotlinmania.awscredentialtypes.Identity
 import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideCredentials as ProvideCredentialsFuture
 
 /*
@@ -67,6 +68,10 @@ class SharedCredentialsProvider(
     override fun provideCredentials(): ProvideCredentialsFuture = provider.provideCredentials()
 
     override fun fallbackOnInterrupt(): Credentials? = provider.fallbackOnInterrupt()
+
+    /** Resolves the identity from this credentials provider, mirroring upstream ResolveIdentity. */
+    suspend fun resolveIdentity(): kotlin.Result<Identity> =
+        provideCredentials().await().map { it.toIdentity() }
 
     /** Returns the stable cache partition associated with this provider. */
     fun cachePartition(): Any = cachePartition
