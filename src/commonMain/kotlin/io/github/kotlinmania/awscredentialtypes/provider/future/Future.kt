@@ -16,6 +16,12 @@ import io.github.kotlinmania.awscredentialtypes.provider.token.Result as TokenRe
 /** Boxed asynchronous producer mirroring upstream `BoxFuture`. */
 typealias BoxFuture<T> = suspend () -> T
 
+/** Output type of [ProvideCredentials], mirroring upstream `Future::Output`. */
+typealias Output = Result<Credentials>
+
+/** Output type of [ProvideToken], mirroring upstream `Future::Output`. */
+typealias TokenOutput = TokenResult
+
 private sealed interface CredentialsState {
     data class Ready(
         val value: Result<Credentials>,
