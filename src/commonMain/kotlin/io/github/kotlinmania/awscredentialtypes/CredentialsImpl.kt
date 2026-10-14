@@ -2,6 +2,7 @@
 package io.github.kotlinmania.awscredentialtypes
 
 import io.github.kotlinmania.awscredentialtypes.attributes.AccountId
+import io.github.kotlinmania.awscredentialtypes.credentialfeature.AwsCredentialFeature
 import io.github.kotlinmania.awscredentialtypes.provider.ProvideCredentials
 import kotlin.reflect.KClass
 import kotlin.time.Instant
@@ -151,6 +152,9 @@ class Credentials private constructor(
      * otherwise stores and returns the value produced by [default].
      */
     inline fun <reified T : Any> getPropertyMutOrDefault(default: () -> T): T = getPropertyOrDefault(default)
+
+    /** Converts these credentials to an [Identity]. */
+    fun toIdentity(): Identity = Identity.from(this)
 
     companion object {
         private const val STATIC_CREDENTIALS: String = "Static"
@@ -355,3 +359,51 @@ class CredentialsBuilder {
                 .providerName("test")
     }
 }
+
+/**
+ * Identity representing an authenticated client identity in the AWS SDK,
+ * mirroring upstream `aws_smithy_runtime_api::client::identity::Identity`.
+ */
+class Identity(
+    val data: Any,
+    val expiration: Instant? = null,
+    private val properties: Map<KClass<*>, Any> = emptyMap(),
+) {
+    /** Retrieves property of type [T] associated with this identity. */
+    inline fun <reified T : Any> property(): T? = property(T::class)
+
+    /** Retrieves property of type [klass] associated with this identity. */
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Any> property(klass: KClass<T>): T? = properties[klass] as? T
+
+    companion object {
+        /**
+         * Creates an [Identity] from [Credentials], mirroring upstream identity conversion.
+         */
+        fun from(credentials: Credentials): Identity {
+            val props = mutableMapOf<KClass<*>, Any>()
+            val accountId = credentials.accountId()
+            if (accountId != null) {
+                props[AccountId::class] = accountId
+            }
+            val existingFeatures = credentials.getProperty<List<AwsCredentialFeature>>().orEmpty()
+            val features = existingFeatures.toMutableList()
+            if (accountId != null && !features.contains(AwsCredentialFeature.RESOLVED_ACCOUNT_ID)) {
+                features.add(AwsCredentialFeature.RESOLVED_ACCOUNT_ID)
+            }
+            if (features.isNotEmpty()) {
+                props[List::class] = features
+            }
+            return Identity(
+                data = credentials,
+                expiration = credentials.expiry(),
+                properties = props,
+            )
+        }
+    }
+}
+
+/**
+ * Creates an [Identity] from [Credentials], mirroring upstream identity conversion.
+ */
+fun from(credentials: Credentials): Identity = Identity.from(credentials)

@@ -5,12 +5,12 @@ Based on AST analysis, here are the concrete next steps.
 ## Summary
 
 - **Files Present:** 11/11 (100.0%)
-- **Function parity:** 79/95 matched (target 132) — 83.2%
-- **Class/type parity:** 29/29 matched (target 47) — 100.0%
-- **Combined symbol parity:** 108/124 matched (target 179) — 87.1%
-- **Average inline-code cosine:** 0.31 (function body across 11 matched files)
+- **Function parity:** 82/95 matched (target 140) — 86.3%
+- **Class/type parity:** 29/29 matched (target 48) — 100.0%
+- **Combined symbol parity:** 111/124 matched (target 188) — 89.5%
+- **Average inline-code cosine:** 0.30 (function body across 11 matched files)
 - **Average documentation cosine:** 0.64 (doc text across 11 matched files)
-- **Cheat-zeroed Files:** 1
+- **Cheat-zeroed Files:** 2
 - **Critical Issues:** 9 files with <0.60 function similarity
 - **Needs Review:** 0 files with 0.60-0.84 function similarity
 - **Excellent:** 2 files with >=0.85 function similarity
@@ -45,9 +45,9 @@ Every matched file is listed below with function and type symbol parity.
 - **Target:** `provider.Credentials`
 - **Similarity:** 0.13
 - **Dependents:** 1
-- **Priority Score:** 1031608.8
-- **Functions:** 9/12 matched
-- **Missing functions:** `provide_credentials`, `provide_credentials`, `resolve_identity`
+- **Priority Score:** 1021608.8
+- **Functions:** 10/12 matched (target 13)
+- **Missing functions:** `provide_credentials`, `provide_credentials`
 - **Types:** 4/4 matched (target 5)
 - **Missing types:** _none_
 - **Tests:** 2/2 matched
@@ -57,26 +57,14 @@ Every matched file is listed below with function and type symbol parity.
 - **Target:** `token.Token`
 - **Similarity:** 0.11
 - **Dependents:** 1
-- **Priority Score:** 1021108.9
-- **Functions:** 6/8 matched (target 9)
-- **Missing functions:** `provide_token`, `resolve_identity`
+- **Priority Score:** 1011108.9
+- **Functions:** 7/8 matched (target 10)
+- **Missing functions:** `provide_token`
 - **Types:** 3/3 matched (target 4)
 - **Missing types:** _none_
 - **Tests:** 1/1 matched
 
-### 4. credentials_impl
-
-- **Target:** `awscredentialtypes.CredentialsImpl`
-- **Similarity:** 0.19
-- **Dependents:** 0
-- **Priority Score:** 33808.1
-- **Functions:** 31/34 matched (target 43)
-- **Missing functions:** `eq`, `fmt`, `from`
-- **Types:** 4/4 matched (target 5)
-- **Missing types:** _none_
-- **Tests:** 4/4 matched
-
-### 5. credential_fn
+### 4. credential_fn
 
 - **Target:** `credentialfn.CredentialFn`
 - **Similarity:** 0.23
@@ -88,7 +76,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing types:** _none_
 - **Tests:** 2/5 matched
 
-### 6. token_fn
+### 5. token_fn
 
 - **Target:** `tokenfn.TokenFn`
 - **Similarity:** 0.25
@@ -99,6 +87,18 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 1/1 matched (target 2)
 - **Missing types:** _none_
 - **Tests:** 2/5 matched
+
+### 6. credentials_impl
+
+- **Target:** `awscredentialtypes.CredentialsImpl [ZERO]`
+- **Similarity:** 0.00
+- **Dependents:** 0
+- **Priority Score:** 23810.0
+- **Functions:** 32/34 matched (target 48)
+- **Missing functions:** `eq`, `fmt`
+- **Types:** 4/4 matched (target 6)
+- **Missing types:** _none_
+- **Tests:** 4/4 matched
 
 ### 7. provider.error
 
@@ -140,7 +140,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Similarity:** 0.00
 - **Dependents:** 0
 - **Priority Score:** 110.0
-- **Functions:** 0/0 matched (target 9)
+- **Functions:** 0/0 matched (target 10)
 - **Missing functions:** _none_
 - **Types:** 1/1 matched
 - **Missing types:** _none_

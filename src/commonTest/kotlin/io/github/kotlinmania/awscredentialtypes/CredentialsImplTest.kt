@@ -71,7 +71,9 @@ class CredentialsImplTest {
                 AwsCredentialFeature.CREDENTIALS_STS_SESSION_TOKEN,
             )
         creds.setProperty(featureProps)
-        val retrieved = creds.getProperty<List<AwsCredentialFeature>>()
+
+        val identity = Identity.from(creds)
+        val retrieved = identity.property<List<AwsCredentialFeature>>()
         assertEquals(featureProps, retrieved)
     }
 
@@ -85,7 +87,10 @@ class CredentialsImplTest {
                 .accountId("123456789012")
                 .providerName("test")
                 .build()
-        assertEquals("123456789012", creds.accountId()?.asStr())
+
+        val identity = Identity.from(creds)
+        val features = identity.property<List<AwsCredentialFeature>>()
+        assertEquals(true, features?.contains(AwsCredentialFeature.RESOLVED_ACCOUNT_ID))
     }
 
     private data object Foo
