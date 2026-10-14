@@ -78,7 +78,8 @@ class CredentialsImplTest {
     @Test
     fun fromCredentialsAddsResolvedAccountIdFeature() {
         val creds =
-            Credentials.builder()
+            Credentials
+                .builder()
                 .accessKeyId("test")
                 .secretAccessKey("test")
                 .accountId("123456789012")
