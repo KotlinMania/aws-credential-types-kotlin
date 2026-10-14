@@ -6,8 +6,8 @@ Based on AST analysis, here are the concrete next steps.
 
 - **Files Present:** 11/11 (100.0%)
 - **Function parity:** 77/95 matched (target 126) — 81.1%
-- **Class/type parity:** 25/29 matched (target 43) — 86.2%
-- **Combined symbol parity:** 102/124 matched (target 169) — 82.3%
+- **Class/type parity:** 26/29 matched (target 43) — 89.7%
+- **Combined symbol parity:** 103/124 matched (target 169) — 83.1%
 - **Average inline-code cosine:** 0.31 (function body across 11 matched files)
 - **Average documentation cosine:** 0.65 (doc text across 11 matched files)
 - **Cheat-zeroed Files:** 1
@@ -64,19 +64,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing types:** _none_
 - **Tests:** 1/1 matched
 
-### 4. credentials_impl
-
-- **Target:** `awscredentialtypes.CredentialsImpl`
-- **Similarity:** 0.18
-- **Dependents:** 0
-- **Priority Score:** 43808.2
-- **Functions:** 31/34 matched (target 43)
-- **Missing functions:** `eq`, `fmt`, `from`
-- **Types:** 3/4 matched (target 5)
-- **Missing types:** `Foo`
-- **Tests:** 4/4 matched
-
-### 5. credential_fn
+### 4. credential_fn
 
 - **Target:** `credentialfn.CredentialFn`
 - **Similarity:** 0.23
@@ -88,7 +76,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing types:** _none_
 - **Tests:** 2/5 matched
 
-### 6. token_fn
+### 5. token_fn
 
 - **Target:** `tokenfn.TokenFn`
 - **Similarity:** 0.25
@@ -99,6 +87,18 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 1/1 matched (target 2)
 - **Missing types:** _none_
 - **Tests:** 2/5 matched
+
+### 6. credentials_impl
+
+- **Target:** `awscredentialtypes.CredentialsImpl`
+- **Similarity:** 0.19
+- **Dependents:** 0
+- **Priority Score:** 33808.1
+- **Functions:** 31/34 matched (target 43)
+- **Missing functions:** `eq`, `fmt`, `from`
+- **Types:** 4/4 matched (target 5)
+- **Missing types:** _none_
+- **Tests:** 4/4 matched
 
 ### 7. provider.error
 
