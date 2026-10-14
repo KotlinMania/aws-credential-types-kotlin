@@ -5,13 +5,15 @@ Based on AST analysis, here are the concrete next steps.
 ## Summary
 
 - **Files Present:** 11/11 (100.0%)
-- **Function parity:** 54/75 matched (target 114) — 72.0%
+- **Function parity:** 68/95 matched (target 114) — 71.6%
 - **Class/type parity:** 23/29 matched (target 41) — 79.3%
-- **Combined symbol parity:** 77/104 matched (target 155) — 74.0%
-- **Average inline-code cosine:** 0.47 (function body across 10 matched files)
-- **Average documentation cosine:** 0.73 (doc text across 10 matched files)
+- **Combined symbol parity:** 91/124 matched (target 155) — 73.4%
+- **Average inline-code cosine:** 0.28 (function body across 11 matched files)
+- **Average documentation cosine:** 0.66 (doc text across 11 matched files)
 - **Cheat-zeroed Files:** 1
 - **Critical Issues:** 9 files with <0.60 function similarity
+- **Needs Review:** 0 files with 0.60-0.84 function similarity
+- **Excellent:** 2 files with >=0.85 function similarity
 
 ## Priority 1: Fix Incomplete High-Dependency Files
 
@@ -30,34 +32,34 @@ Every matched file is listed below with function and type symbol parity.
 ### 1. provider.future
 
 - **Target:** `future.Future`
-- **Similarity:** 0.34
+- **Similarity:** 0.16
 - **Dependents:** 2
-- **Priority Score:** 2030706.6
-- **Functions:** 2/3 matched (target 8)
-- **Missing functions:** `poll`
+- **Priority Score:** 2041008.4
+- **Functions:** 4/6 matched (target 8)
+- **Missing functions:** `poll`, `poll`
 - **Types:** 2/4 matched (target 6)
 - **Missing types:** `BoxFuture`, `Output`
 
 ### 2. provider.credentials
 
 - **Target:** `provider.Credentials`
-- **Similarity:** 0.42
+- **Similarity:** 0.13
 - **Dependents:** 1
-- **Priority Score:** 1031305.8
-- **Functions:** 8/9 matched (target 12)
-- **Missing functions:** `resolve_identity`
+- **Priority Score:** 1051608.8
+- **Functions:** 9/12 matched
+- **Missing functions:** `provide_credentials`, `provide_credentials`, `resolve_identity`
 - **Types:** 2/4 matched (target 3)
 - **Missing types:** `Result`, `Storer`
 - **Tests:** 2/2 matched
 
 ### 3. provider.token
 
-- **Target:** `provider.Token`
-- **Similarity:** 0.33
+- **Target:** `token.Token`
+- **Similarity:** 0.06
 - **Dependents:** 1
-- **Priority Score:** 1021006.8
-- **Functions:** 5/7 matched (target 8)
-- **Missing functions:** `from`, `resolve_identity`
+- **Priority Score:** 1031109.4
+- **Functions:** 5/8 matched
+- **Missing functions:** `from`, `provide_token`, `resolve_identity`
 - **Types:** 3/3 matched (target 4)
 - **Missing types:** _none_
 - **Tests:** 1/1 matched
@@ -65,10 +67,10 @@ Every matched file is listed below with function and type symbol parity.
 ### 4. credentials_impl
 
 - **Target:** `awscredentialtypes.CredentialsImpl`
-- **Similarity:** 0.55
+- **Similarity:** 0.18
 - **Dependents:** 0
-- **Priority Score:** 73204.5
-- **Functions:** 22/28 matched (target 40)
+- **Priority Score:** 73808.2
+- **Functions:** 28/34 matched (target 40)
 - **Missing functions:** `eq`, `fmt`, `expiry_mut`, `get_property_mut`, `get_property_mut_or_default`, `from`
 - **Types:** 3/4 matched (target 5)
 - **Missing types:** `Foo`
@@ -77,37 +79,37 @@ Every matched file is listed below with function and type symbol parity.
 ### 5. token_fn
 
 - **Target:** `tokenfn.TokenFn`
-- **Similarity:** 0.31
+- **Similarity:** 0.10
 - **Dependents:** 0
-- **Priority Score:** 50906.9
+- **Priority Score:** 50909.0
 - **Functions:** 3/8 matched (target 7)
 - **Missing functions:** `fmt`, `assert_send_sync`, `creds_are_send_sync`, `check_is_str_ref`, `test_async_provider`
 - **Types:** 1/1 matched (target 2)
 - **Missing types:** _none_
 - **Tests:** 1/5 matched
 
-### 6. credential_fn
+### 6. provider.error
+
+- **Target:** `error.Error`
+- **Similarity:** 0.18
+- **Dependents:** 0
+- **Priority Score:** 42408.2
+- **Functions:** 12/16 matched (target 18)
+- **Missing functions:** `fmt`, `source`, `fmt`, `source`
+- **Types:** 8/8 matched (target 14)
+- **Missing types:** _none_
+
+### 7. credential_fn
 
 - **Target:** `credentialfn.CredentialFn`
-- **Similarity:** 0.34
+- **Similarity:** 0.08
 - **Dependents:** 0
-- **Priority Score:** 40906.6
+- **Priority Score:** 40909.2
 - **Functions:** 4/8 matched (target 7)
 - **Missing functions:** `fmt`, `assert_send_sync`, `check_is_str_ref`, `test_async_provider`
 - **Types:** 1/1 matched (target 2)
 - **Missing types:** _none_
 - **Tests:** 2/5 matched
-
-### 7. provider.error
-
-- **Target:** `error.Error`
-- **Similarity:** 0.52
-- **Dependents:** 0
-- **Priority Score:** 21704.8
-- **Functions:** 7/9 matched (target 18)
-- **Missing functions:** `fmt`, `source`
-- **Types:** 8/8 matched (target 14)
-- **Missing types:** _none_
 
 ### 8. credential_feature
 
@@ -123,9 +125,9 @@ Every matched file is listed below with function and type symbol parity.
 ### 9. attributes
 
 - **Target:** `attributes.Attributes`
-- **Similarity:** 0.86
+- **Similarity:** 0.21
 - **Dependents:** 0
-- **Priority Score:** 401.4
+- **Priority Score:** 407.9
 - **Functions:** 3/3 matched (target 6)
 - **Missing functions:** _none_
 - **Types:** 1/1 matched (target 2)
@@ -145,7 +147,7 @@ Every matched file is listed below with function and type symbol parity.
 
 ### 11. provider
 
-- **Target:** `provider.Mod [STUB]`
+- **Target:** `provider.Mod`
 - **Similarity:** 1.00
 - **Dependents:** 0
 - **Priority Score:** 0.0
