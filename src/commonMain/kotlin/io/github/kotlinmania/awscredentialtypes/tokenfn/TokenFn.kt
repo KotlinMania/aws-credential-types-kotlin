@@ -24,6 +24,9 @@ class ProvideTokenFn internal constructor(
         ProvideTokenFuture.new { provider() }
 
     override fun toString(): String = "ProvideTokenFn"
+
+    /** Formats the provider for debugging, mirroring upstream Debug::fmt. */
+    fun fmt(): String = toString()
 }
 
 /**
