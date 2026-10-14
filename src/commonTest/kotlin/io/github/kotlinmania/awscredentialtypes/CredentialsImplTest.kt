@@ -48,7 +48,7 @@ class CredentialsImplTest {
         creds1.setProperty(AwsCredentialFeature.CREDENTIALS_CODE)
 
         val creds2 = Credentials.forTestsWithSessionToken()
-        creds2.setProperty(SomeOtherProp("foo"))
+        creds2.setProperty(Foo)
 
         assertEquals(creds1, creds2)
     }
@@ -88,7 +88,5 @@ class CredentialsImplTest {
         assertEquals("123456789012", creds.accountId()?.asStr())
     }
 
-    private data class SomeOtherProp(
-        val value: String,
-    )
+    private data object Foo
 }
