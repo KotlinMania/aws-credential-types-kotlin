@@ -6,8 +6,8 @@ Based on AST analysis, here are the concrete next steps.
 
 - **Files Present:** 11/11 (100.0%)
 - **Function parity:** 77/95 matched (target 126) — 81.1%
-- **Class/type parity:** 26/29 matched (target 43) — 89.7%
-- **Combined symbol parity:** 103/124 matched (target 169) — 83.1%
+- **Class/type parity:** 27/29 matched (target 45) — 93.1%
+- **Combined symbol parity:** 104/124 matched (target 171) — 83.9%
 - **Average inline-code cosine:** 0.31 (function body across 11 matched files)
 - **Average documentation cosine:** 0.65 (doc text across 11 matched files)
 - **Cheat-zeroed Files:** 1
@@ -34,11 +34,11 @@ Every matched file is listed below with function and type symbol parity.
 - **Target:** `future.Future`
 - **Similarity:** 0.16
 - **Dependents:** 2
-- **Priority Score:** 2011008.4
+- **Priority Score:** 2001008.4
 - **Functions:** 6/6 matched (target 10)
 - **Missing functions:** _none_
-- **Types:** 3/4 matched (target 7)
-- **Missing types:** `Output`
+- **Types:** 4/4 matched (target 9)
+- **Missing types:** _none_
 
 ### 2. provider.credentials
 
