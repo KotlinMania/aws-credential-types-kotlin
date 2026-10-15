@@ -6,7 +6,9 @@ package io.github.kotlinmania.awscredentialtypes.attributes
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// Types representing specific pieces of data contained within credentials or within token
+/**
+ * Types representing specific pieces of data contained within credentials or within token
+ */
 
 /** Type representing a unique identifier representing an AWS account. */
 class AccountId private constructor(

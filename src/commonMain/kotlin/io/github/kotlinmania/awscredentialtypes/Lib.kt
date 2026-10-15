@@ -9,14 +9,23 @@ import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideToken as 
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+/**
+ * `aws-credential-types` provides types concerned with AWS SDK credentials including:
+ * * Traits for credentials providers and for credentials caching
+ * * An opaque struct representing credentials
+ * * Concrete implementations of credentials caching
+ *
+ * Exposes modules `attributes`, `credential_feature`, `credential_fn`, `credentials_impl`, `provider`, and `token_fn`.
+ * Re-exports `Credentials` and `CredentialsBuilder`.
+ */
 
 /**
  * AWS Access Token
  *
- * This access token type is used to authenticate to AWS services that use HTTP Bearer Auth with
- * an AWS Builder ID such as CodeCatalyst.
+ * This access token type is used to authenticate to AWS services that use HTTP Bearer
+ * Auth with an AWS Builder ID such as CodeCatalyst.
  *
- * For more details on tokens, see https://oauth.net/2/access-tokens.
+ * For more details on tokens, see: <https://oauth.net/2/access-tokens>
  */
 class Token private constructor(
     private val token: String,

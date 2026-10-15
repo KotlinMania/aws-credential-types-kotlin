@@ -9,9 +9,9 @@ import io.github.kotlinmania.awscredentialtypes.provider.token.Result as TokenRe
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// Convenience holder that wraps either an already-resolved credentials result or a deferred
-// producer. Returned from ProvideCredentials.provideCredentials in mirror of the upstream future
-// newtype.
+/**
+ * Convenience `ProvideCredentials` struct that implements the `ProvideCredentials` trait.
+ */
 
 /** Boxed asynchronous producer mirroring upstream `BoxFuture`. */
 typealias BoxFuture<T> = suspend () -> T
@@ -32,7 +32,7 @@ private sealed interface CredentialsState {
     ) : CredentialsState
 }
 
-/** Holder that [ProvideCredentials.provideCredentials] must return. */
+/** Future new-type that `ProvideCredentials::provide_credentials` must return. */
 class ProvideCredentials private constructor(
     private val state: CredentialsState,
 ) {
@@ -53,11 +53,11 @@ class ProvideCredentials private constructor(
     override fun toString(): String = "ProvideCredentials"
 
     companion object {
-        /** Creates a [ProvideCredentials] holder from a deferred producer. */
-        fun new(producer: suspend () -> Result<Credentials>): ProvideCredentials =
-            ProvideCredentials(CredentialsState.Pending(producer))
+        /** Creates a `ProvideCredentials` struct from a future. */
+        fun new(future: suspend () -> Result<Credentials>): ProvideCredentials =
+            ProvideCredentials(CredentialsState.Pending(future))
 
-        /** Creates a [ProvideCredentials] holder from a resolved credentials value. */
+        /** Creates a `ProvideCredentials` struct from a resolved credentials value. */
         fun ready(credentials: Result<Credentials>): ProvideCredentials =
             ProvideCredentials(CredentialsState.Ready(credentials))
     }
@@ -73,7 +73,7 @@ private sealed interface TokenState {
     ) : TokenState
 }
 
-/** Holder that [io.github.kotlinmania.awscredentialtypes.provider.token.ProvideToken.provideToken] must return. */
+/** Future new-type that `ProvideToken::provide_token` must return. */
 class ProvideToken private constructor(
     private val state: TokenState,
 ) {
@@ -94,12 +94,12 @@ class ProvideToken private constructor(
     override fun toString(): String = "ProvideToken"
 
     companion object {
-        /** Creates a [ProvideToken] holder from a deferred producer. */
-        fun new(producer: suspend () -> TokenResult): ProvideToken =
-            ProvideToken(TokenState.Pending(producer))
+        /** Creates a `ProvideToken` struct from a future. */
+        fun new(future: suspend () -> TokenResult): ProvideToken =
+            ProvideToken(TokenState.Pending(future))
 
-        /** Creates a [ProvideToken] holder from a resolved token value. */
-        fun ready(token: TokenResult): ProvideToken =
-            ProvideToken(TokenState.Ready(token))
+        /** Creates a `ProvideToken` struct from a resolved credentials value. */
+        fun ready(credentials: TokenResult): ProvideToken =
+            ProvideToken(TokenState.Ready(credentials))
     }
 }
