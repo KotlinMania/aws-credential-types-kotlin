@@ -10,27 +10,30 @@ import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideToken as 
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// AWS Access Tokens for SSO
-//
-// When authenticating with an AWS Builder ID, single sign-on (SSO) will provide an access token
-// that can then be used to authenticate with services such as CodeCatalyst.
-//
-// This module provides the [ProvideToken] interface that is used to configure token providers in
-// the SDK config.
+/**
+ * AWS Access Tokens for SSO
+ *
+ * When authenticating with an AWS Builder ID, single sign-on (SSO) will provide
+ * an access token that can then be used to authenticate with services such as
+ * Code Catalyst.
+ *
+ * This module provides the [ProvideToken] trait that is used to configure
+ * token providers in the SDK config.
+ */
 
-/** Result type for token providers. */
+/** Result type for token providers */
 typealias Result = kotlin.Result<Token>
 
 /** Access Token Provider */
 interface ProvideToken {
-    /** Returns a holder that provides an access token. */
+    /** Returns a future that provides an access token. */
     fun provideToken(): ProvideTokenFuture
 }
 
 /**
  * Access token provider wrapper that may be shared.
  *
- * Newtype wrapper around [ProvideToken] that forwards calls to an inner provider.
+ * Newtype wrapper around [ProvideToken] that implements `Clone` using an internal `Arc`.
  */
 class SharedTokenProvider(
     private val provider: ProvideToken,
@@ -52,7 +55,12 @@ class SharedTokenProvider(
     override fun toString(): String = "SharedTokenProvider"
 
     companion object {
-        /** Create a new [SharedTokenProvider] from [ProvideToken]. */
+        /**
+         * Create a new [SharedTokenProvider] from [ProvideToken].
+         *
+         * The given provider will be wrapped in an internal `Arc`. If your
+         * provider is already in an `Arc`, use `SharedTokenProvider::from(provider)` instead.
+         */
         fun new(provider: ProvideToken): SharedTokenProvider = SharedTokenProvider(provider)
 
         /** Creates a [SharedTokenProvider] from [ProvideToken]. */

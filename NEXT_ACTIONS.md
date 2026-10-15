@@ -8,12 +8,12 @@ Based on AST analysis, here are the concrete next steps.
 - **Function parity:** 82/95 matched (target 140) — 86.3%
 - **Class/type parity:** 29/29 matched (target 48) — 100.0%
 - **Combined symbol parity:** 111/124 matched (target 188) — 89.5%
-- **Average inline-code cosine:** 0.30 (function body across 11 matched files)
-- **Average documentation cosine:** 0.64 (doc text across 11 matched files)
-- **Cheat-zeroed Files:** 2
-- **Critical Issues:** 9 files with <0.60 function similarity
+- **Average inline-code cosine:** 0.14 (function body across 11 matched files)
+- **Average documentation cosine:** 0.90 (doc text across 11 matched files)
+- **Cheat-zeroed Files:** 7
+- **Critical Issues:** 10 files with <0.60 function similarity
 - **Needs Review:** 0 files with 0.60-0.84 function similarity
-- **Excellent:** 2 files with >=0.85 function similarity
+- **Excellent:** 1 files with >=0.85 function similarity
 
 ## Priority 1: Fix Incomplete High-Dependency Files
 
@@ -31,10 +31,10 @@ Every matched file is listed below with function and type symbol parity.
 
 ### 1. provider.future
 
-- **Target:** `future.Future`
-- **Similarity:** 0.16
+- **Target:** `future.Future [ZERO]`
+- **Similarity:** 0.00
 - **Dependents:** 2
-- **Priority Score:** 2001008.4
+- **Priority Score:** 2001010.0
 - **Functions:** 6/6 matched (target 10)
 - **Missing functions:** _none_
 - **Types:** 4/4 matched (target 9)
@@ -42,10 +42,10 @@ Every matched file is listed below with function and type symbol parity.
 
 ### 2. provider.credentials
 
-- **Target:** `provider.Credentials`
-- **Similarity:** 0.13
+- **Target:** `provider.Credentials [ZERO]`
+- **Similarity:** 0.00
 - **Dependents:** 1
-- **Priority Score:** 1021608.8
+- **Priority Score:** 1021610.0
 - **Functions:** 10/12 matched (target 13)
 - **Missing functions:** `provide_credentials`, `provide_credentials`
 - **Types:** 4/4 matched (target 5)
@@ -64,25 +64,25 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing types:** _none_
 - **Tests:** 1/1 matched
 
-### 4. credential_fn
+### 4. token_fn
 
-- **Target:** `credentialfn.CredentialFn`
-- **Similarity:** 0.23
+- **Target:** `tokenfn.TokenFn [ZERO]`
+- **Similarity:** 0.00
 - **Dependents:** 0
-- **Priority Score:** 30907.7
-- **Functions:** 5/8 matched (target 11)
+- **Priority Score:** 30910.0
+- **Functions:** 5/8 matched (target 12)
 - **Missing functions:** `assert_send_sync`, `check_is_str_ref`, `test_async_provider`
 - **Types:** 1/1 matched (target 2)
 - **Missing types:** _none_
 - **Tests:** 2/5 matched
 
-### 5. token_fn
+### 5. credential_fn
 
-- **Target:** `tokenfn.TokenFn`
-- **Similarity:** 0.25
+- **Target:** `credentialfn.CredentialFn [ZERO]`
+- **Similarity:** 0.00
 - **Dependents:** 0
-- **Priority Score:** 30907.5
-- **Functions:** 5/8 matched (target 12)
+- **Priority Score:** 30910.0
+- **Functions:** 5/8 matched (target 11)
 - **Missing functions:** `assert_send_sync`, `check_is_str_ref`, `test_async_provider`
 - **Types:** 1/1 matched (target 2)
 - **Missing types:** _none_
@@ -147,14 +147,15 @@ Every matched file is listed below with function and type symbol parity.
 
 ### 11. provider
 
-- **Target:** `provider.Mod`
-- **Similarity:** 1.00
+- **Target:** `provider.Mod [ZERO]`
+- **Similarity:** 0.00
 - **Dependents:** 0
-- **Priority Score:** 0.0
+- **Priority Score:** 10.0
 - **Functions:** 0/0 matched
 - **Missing functions:** _none_
 - **Types:** 0/0 matched (target 1)
 - **Missing types:** _none_
+- **Lint issues:** 1
 
 ## Success Criteria
 

@@ -10,18 +10,20 @@ import io.github.kotlinmania.awscredentialtypes.provider.token.Result as TokenRe
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// Types that allow an access token provider to be created from a closure.
+/**
+ * Types that allow an access token provider to be created from a closure
+ */
 
 /**
  * A [ProvideToken] implemented by a closure.
  *
- * See [provideTokenFn] for more details.
+ * See [provideTokenFn] for more details (in `aws_credential_types::token_fn`).
  */
 class ProvideTokenFn internal constructor(
-    private val provider: suspend () -> TokenResult,
+    private val f: suspend () -> TokenResult,
 ) : ProvideToken {
     override fun provideToken(): ProvideTokenFuture =
-        ProvideTokenFuture.new { provider() }
+        ProvideTokenFuture.new { f() }
 
     override fun toString(): String = "ProvideTokenFn"
 
@@ -30,10 +32,25 @@ class ProvideTokenFn internal constructor(
 }
 
 /**
- * Returns a new token provider built with the given closure.
+ * Returns a new token provider built with the given closure. This allows you
+ * to create an [ProvideToken] implementation from an async block that returns
+ * a [TokenResult] (matching `crate::provider::token::Result`).
  *
- * This allows you to create a [ProvideToken] implementation from a suspending block that returns a
- * token-provider result.
+ * # Examples
+ *
+ * ```kotlin
+ * // use aws_credential_types::Token
+ * // use aws_credential_types::token_fn::provide_token_fn
+ * suspend fun loadToken(): Token {
+ *     return Token.new("token-value", null)
+ * }
+ *
+ * provideTokenFn {
+ *     // Async process to retrieve a token goes here
+ *     val token = loadToken()
+ *     Result.success(token)
+ * }
+ * ```
  */
-fun provideTokenFn(provider: suspend () -> TokenResult): ProvideTokenFn =
-    ProvideTokenFn(provider)
+fun provideTokenFn(f: suspend () -> TokenResult): ProvideTokenFn =
+    ProvideTokenFn(f)
