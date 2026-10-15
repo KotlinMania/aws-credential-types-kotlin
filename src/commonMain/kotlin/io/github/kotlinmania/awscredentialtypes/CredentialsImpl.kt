@@ -4,6 +4,8 @@ package io.github.kotlinmania.awscredentialtypes
 import io.github.kotlinmania.awscredentialtypes.attributes.AccountId
 import io.github.kotlinmania.awscredentialtypes.credentialfeature.AwsCredentialFeature
 import io.github.kotlinmania.awscredentialtypes.provider.ProvideCredentials
+import io.github.kotlinmania.zeroize.Zeroize
+import io.github.kotlinmania.zeroize.ZeroizeOnDrop
 import kotlin.reflect.KClass
 import kotlin.time.Instant
 import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideCredentials as ProvideCredentialsFuture
@@ -26,14 +28,25 @@ import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideCredentia
 class Credentials private constructor(
     private val inner: Inner,
     @PublishedApi internal val properties: MutableMap<KClass<*>, Any>,
-) : ProvideCredentials {
+) : ProvideCredentials,
+    Zeroize,
+    ZeroizeOnDrop,
+    AutoCloseable {
     override fun provideCredentials(): ProvideCredentialsFuture =
         ProvideCredentialsFuture.ready(Result.success(this.clone()))
 
+    override fun zeroize() {
+        inner.zeroize()
+    }
+
+    override fun close() {
+        zeroize()
+    }
+
     private class Inner(
-        val accessKeyId: String,
-        val secretAccessKey: String,
-        val sessionToken: String?,
+        var accessKeyId: String,
+        var secretAccessKey: String,
+        var sessionToken: String?,
         // Credential Expiry
         //
         // An [Instant] at which the credentials should no longer be used because they have expired.
@@ -46,7 +59,14 @@ class Credentials private constructor(
         // https://docs.aws.amazon.com/sdkref/latest/guide/feature-account-endpoints.html
         val accountId: AccountId?,
         val providerName: String,
-    ) {
+    ) : Zeroize,
+        ZeroizeOnDrop {
+        override fun zeroize() {
+            accessKeyId = ""
+            secretAccessKey = ""
+            sessionToken = null
+        }
+
         override fun equals(other: Any?): Boolean =
             this === other ||
                 (

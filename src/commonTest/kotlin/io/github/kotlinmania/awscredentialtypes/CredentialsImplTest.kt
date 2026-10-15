@@ -93,5 +93,21 @@ class CredentialsImplTest {
         assertEquals(true, features?.contains(AwsCredentialFeature.RESOLVED_ACCOUNT_ID))
     }
 
+    @Test
+    fun zeroizeClearsCredentials() {
+        val creds =
+            Credentials.create(
+                "akid",
+                "secret",
+                "token",
+                Instant.fromEpochSeconds(1234567890),
+                "test",
+            )
+        creds.zeroize()
+        assertEquals("", creds.accessKeyId())
+        assertEquals("", creds.secretAccessKey())
+        assertEquals(null, creds.sessionToken())
+    }
+
     private data object Foo
 }
