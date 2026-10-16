@@ -26,7 +26,7 @@ package io.github.kotlinmania.awscredentialtypes.provider
  *
  * ### With dynamically loaded credentials
  * If you are loading credentials dynamically, you can provide your own implementation of
- * [`ProvideCredentials`]. Generally, this is best done by
+ * [ProvideCredentials]. Generally, this is best done by
  * defining an inherent `async fn` on your structure, then calling that method directly from
  * the trait implementation.
  *
