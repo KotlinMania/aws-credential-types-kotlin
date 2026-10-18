@@ -18,8 +18,13 @@ class CredentialsProviderTest {
             assertTrue(resolved.isSuccess)
             assertEquals("AKID", resolved.getOrThrow().accessKeyId())
             assertEquals("SECRET", resolved.getOrThrow().secretAccessKey())
-            assertEquals("test",
-                resolved.getOrThrow().toString().substringAfter("provider_name: \"").substringBefore("\"")
+            assertEquals(
+                "test",
+                resolved
+                    .getOrThrow()
+                    .toString()
+                    .substringAfter("provider_name: \"")
+                    .substringBefore("\""),
             )
         }
 
