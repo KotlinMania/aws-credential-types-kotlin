@@ -63,7 +63,7 @@ class Token private constructor(
 
     override fun hashCode(): Int {
         var result = token.hashCode()
-        result = 31 * result + (expiresAfter?.hashCode() ?: 0)
+        result = 31 * result + expiresAfter.hashCode()
         return result
     }
 

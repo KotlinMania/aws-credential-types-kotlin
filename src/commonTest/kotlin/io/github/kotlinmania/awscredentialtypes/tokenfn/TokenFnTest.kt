@@ -13,7 +13,7 @@ private fun checkIsStrRef(input: String) {
     assertEquals(input, input)
 }
 
-private suspend fun testAsyncProvider(input: String): TokenResult =
+private fun testAsyncProvider(input: String): TokenResult =
     Result.success(Token.new(input, null))
 
 fun credsAreSendSync() {
