@@ -12,6 +12,7 @@ kotlinxBenchmark = "0.5.0"
 zeroize = "0.1.1"
 tokio = "0.1.1"
 asyncTrait = "0.1.2"
+procMacro = "0.1.4"
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -34,6 +35,8 @@ zeroize-kotlin = { module = "io.github.kotlinmania:zeroize-kotlin", version.ref 
 tokio-kotlin = { module = "io.github.kotlinmania:tokio-kotlin", version.ref = "tokio" }
 async-trait-kotlin = { module = "io.github.kotlinmania:async-trait-kotlin", version.ref = "asyncTrait" }
 
+proc-macro-kotlin = { module = "io.github.kotlinmania:proc-macro-kotlin", version.ref = "procMacro" }
+
 [bundles]
 aws-credential-types-commonMain = [
   "kotlinx-coroutines-core",
@@ -47,4 +50,5 @@ aws-credential-types-commonTest = [
   "kotlinx-coroutines-test",
   "tokio-kotlin",
   "async-trait-kotlin",
+  "proc-macro-kotlin",
 ]
