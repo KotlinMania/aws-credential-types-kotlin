@@ -6,20 +6,8 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-private fun <T> assertSendSync() {}
-
-private fun checkIsStrRef(input: String) {
-    assertEquals(input, input)
-}
-
 private fun testAsyncProvider(input: String): Result<Credentials> =
     Result.success(Credentials.create(input, input, null, null, "test"))
-
-fun credsAreSendSync() {
-    assertSendSync<Credentials>()
-    val creds = Credentials.forTests()
-    assertEquals("ANOTREAL", creds.accessKeyId())
-}
 
 suspend fun provideCredentialsFnClosureCanBorrow() {
     val thingsToBorrow = listOf("one", "two")
@@ -28,7 +16,6 @@ suspend fun provideCredentialsFnClosureCanBorrow() {
     for (thing in thingsToBorrow) {
         val provider =
             provideCredentialsFn {
-                checkIsStrRef(thing)
                 testAsyncProvider(thing)
             }
         providers += provider
@@ -55,12 +42,7 @@ suspend fun provideCredentialsFnClosureCanBorrow() {
 }
 
 class CredentialFnTest {
-    @Test
-    fun credsAreSendSync() {
-        io.github.kotlinmania.awscredentialtypes.credentialfn
-            .credsAreSendSync()
-    }
-
+    // Upstream Send/Sync type bounds and borrowed-string checks have no Kotlin type-system equivalent.
     @Test
     fun provideCredentialsFnClosureCanBorrow() =
         runTest {

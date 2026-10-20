@@ -45,10 +45,10 @@ aws-credential-types-commonMain = [
   "kotlinx-datetime",
   "collections-immutable",
   "zeroize-kotlin",
+  "proc-macro-kotlin",
 ]
 aws-credential-types-commonTest = [
   "kotlinx-coroutines-test",
   "tokio-kotlin",
   "async-trait-kotlin",
-  "proc-macro-kotlin",
 ]

@@ -1376,20 +1376,26 @@ val strictSwiftConfiguration = layout.projectDirectory.file("verification/strict
 tasks.matching { it.name.endsWith("generateSPMPackage", ignoreCase = true) }.configureEach {
     doLast {
         val manifests =
-            layout.buildDirectory.dir("SPMPackage").get().asFile
-                .walkTopDown().filter { it.isFile && it.name == "Package.swift" }.toList()
+            layout.buildDirectory
+                .dir("SPMPackage")
+                .get()
+                .asFile
+                .walkTopDown()
+                .filter { it.isFile && it.name == "Package.swift" }
+                .toList()
         check(manifests.isNotEmpty()) { "No generated Swift package manifests" }
         val execOperations = serviceOf<ExecOperations>()
         manifests.forEach { manifest ->
-            execOperations.exec {
-                commandLine(
-                    "python3",
-                    layout.projectDirectory.file("verification/enforce_swift6.py").asFile,
-                    manifest,
-                    "--receipt",
-                    manifest.parentFile.resolve("swift6-manifest-receipt.json"),
-                )
-            }.assertNormalExitValue()
+            execOperations
+                .exec {
+                    commandLine(
+                        "python3",
+                        layout.projectDirectory.file("verification/enforce_swift6.py").asFile,
+                        manifest,
+                        "--receipt",
+                        manifest.parentFile.resolve("swift6-manifest-receipt.json"),
+                    )
+                }.assertNormalExitValue()
         }
     }
 }
@@ -1472,17 +1478,36 @@ tasks.register("swiftExportSmokeTest") {
             }
         val swiftTestCommand =
             mutableListOf(
-                "swift", "test", "-v",
-                "-Xswiftc", "-swift-version", "-Xswiftc", "6", "-Xswiftc", "-warnings-as-errors",
+                "swift",
+                "test",
+                "-v",
+                "-Xswiftc",
+                "-swift-version",
+                "-Xswiftc",
+                "6",
+                "-Xswiftc",
+                "-warnings-as-errors",
             )
         if (developerDir.endsWith("CommandLineTools")) {
             val frameworks = "$developerDir/Library/Developer/Frameworks"
             swiftTestCommand +=
                 listOf(
-                    "-Xswiftc", "-F", "-Xswiftc", frameworks,
-                    "-Xlinker", "-F", "-Xlinker", frameworks,
-                    "-Xlinker", "-rpath", "-Xlinker", frameworks,
-                    "-Xlinker", "-rpath", "-Xlinker", "$developerDir/Library/Developer/usr/lib",
+                    "-Xswiftc",
+                    "-F",
+                    "-Xswiftc",
+                    frameworks,
+                    "-Xlinker",
+                    "-F",
+                    "-Xlinker",
+                    frameworks,
+                    "-Xlinker",
+                    "-rpath",
+                    "-Xlinker",
+                    frameworks,
+                    "-Xlinker",
+                    "-rpath",
+                    "-Xlinker",
+                    "$developerDir/Library/Developer/usr/lib",
                 )
         }
         val swiftTestOutput = ByteArrayOutputStream()
