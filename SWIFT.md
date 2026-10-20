@@ -140,15 +140,42 @@ Swift bindings for a Kotlin Multiplatform module's exported API.
 Instead of consuming the Kotlin output through Objective-C interop
 (the legacy approach that produces `KotlinInt`, mangled names, and
 `underscore_prefixed_calls`), Swift consumers get a real
-`.swiftmodule` they can `import <Module>` against, with Kotlin
-typealiases mapped to native Swift types, generic parameters
-preserved, and nullability flowing through correctly.
+`.swiftmodule` they can `import <Module>` against. Kotlin typealiases
+are exported too; generic type parameters are erased to their upper
+bounds rather than preserved as concrete Swift types.
 
 The KotlinMania workspace standardized on Swift Export across every
 repository that ships an XCFramework so that downstream Swift / Xcode
 consumers don't have to opt into the legacy interop. The rollout
 this recipe describes is the mechanical part — wiring up the build,
 the test harness, and the CI workflow.
+
+### Direct-export contracts and generated evidence
+
+Use the [official direct Swift export guide](https://kotlinlang.org/docs/native-swift-export.html)
+to assess the source API, then read the generated Swift declarations and
+Kotlin bridges to verify what the installed toolchain actually exports.
+Emission alone does not prove that an API satisfies the documented contract.
+
+- Ordinary exported classes must be final and directly inherit from
+  `Any`. The guide separately documents sealed hierarchies and
+  cross-language inheritance through a Kotlin interface plus an open
+  Kotlin base; those are not general permission to export exception
+  subclasses.
+- Generic parameters erase to their upper bounds, generic types are
+  generally unsupported, and operator support is limited. A Kotlin
+  `SynResult<T>` whose generated `getOrThrow()` returns
+  `(any KotlinRuntimeSupport._KotlinBridgeable)?` is not a concrete,
+  typed Swift result.
+- `Unit` maps to `Void`, and constructors map to initializers. Diagnose
+  generated conversion warnings separately from source API violations.
+- Declarations requiring opt-in need the explicit module compiler
+  `optIn` required by the guide. Opting in does not repair unrelated
+  unchecked casts or redundant expressions.
+
+For diagnostic APIs, follow
+[the concrete SynError repair and verification rules](#diagnostic-apis-repair-the-exported-types-not-their-aliases)
+below. A new name alone does not remove inherited or erased Kotlin APIs.
 
 ---
 
@@ -675,65 +702,52 @@ become deletable.
    type in public surface); every match in
    `io.github.kotlinmania.<pkg>.<Type><kotlin.Any` is trigger 8a
    (unconstrained generic). Both are fixable per-repo via the
-   recipes below. If grep returns no results, gap #8 doesn't apply to
-   this repo and no API change is needed.
+   recipes below. No matches rule out only those searched patterns;
+   still check the documented source contracts and the complete
+   generated compilation diagnostics.
 
-9. **Exporting `kotlinx.coroutines.Flow` (or suspend functions) needs a
-   four-part setup that the base rollout does NOT cover.** First repo to
-   hit this end-to-end: `crossterm-kotlin` (public `Flow<InternalEvent>`
-   event stream). The failures cascade one after another; all four fixes
-   are required together. Symptom that starts it: the generated
+9. **Audit coroutine export against the installed toolchain and strict
+   generated compilation.** The historical `crossterm-kotlin` rollout
+   (public `Flow<InternalEvent>` event stream) encountered the following
+   configuration, runtime, cache and package issues. Diagnose each from
+   actual output; they are not an unconditional four-part recipe.
+   One observed symptom was that the generated
    `OrgJetbrainsKotlinxKotlinxCoroutinesCore.swift` references a
    `KotlinCoroutineSupport` module that is neither imported nor emitted
    (`cannot find type 'KotlinCoroutineSupport' in scope`).
 
-   **9a — Turn on coroutine support in the `swiftExport {}` block.** KGP
-   defaults it OFF (`SwiftExportAction.kt`:
-   `userDefinedSettings.getOrElse("enableCoroutinesSupport") { "false" }`),
-   so `Flow` gets half-exported with references to a `KotlinCoroutineSupport`
-   module the build never generates. Turn it on (the DSL method is
-   `@ExperimentalSwiftExportDsl`, so opt in on the call expression):
+   **9a — Verify configuration rather than inferring runtime inclusion
+   from a setting name.** In the inspected Kotlin 2.4.20 KGP action,
+   module `settings` become `SwiftModuleConfig.experimentalFeatures`;
+   the global `SwiftExportConfig` coroutine-support Boolean is separate.
+   Removing `settings["enableCoroutinesSupport"] = "true"` from Syn did
+   not remove `KotlinCoroutineSupport` from freshly generated output.
+   Do not claim that removing an unused module setting fixes runtime
+   warnings. Check the resolved plugin, actual configuration and emitted
+   module inputs. Use documented configuration supported by that
+   installed version; do not invent settings or mutate cached tools.
 
-   ```kotlin
-   swiftExport {
-       moduleName = frameworkName
-       flattenPackage = projectNamespace
-       @OptIn(org.jetbrains.kotlin.gradle.swiftexport.ExperimentalSwiftExportDsl::class)
-       configure {
-           settings.put("enableCoroutinesSupport", "true")
-       }
-   }
-   ```
+   **9b — Keep `allWarningsAsErrors=true` for generated bridge and runtime
+   compilation. There is no coroutine-runtime exception.** This replaces
+   the former recipe that disabled strict warnings on `compileSwiftExport*`.
+   A warning in generated source still fails the gate.
 
-   **9b — Relax `allWarningsAsErrors` for the `compileSwiftExport*` task
-   family — and ONLY for the coroutine-runtime case.** Once 9a is on, the
-   plugin emits a generated `build/SwiftExport/<t>/<c>/KotlinCoroutineSupport/
-   KotlinCoroutineSupport.kt` runtime module that is itself not
-   warning-clean (kotlinx.coroutines inheritance opt-in, useless-elvis,
-   unchecked `SwiftFlowIterator` casts). That is **plugin-generated
-   runtime we do not author and cannot edit** (it is regenerated every
-   build), so there is no source fix.
+   Classify the cause before changing code. Source API shapes can pull
+   unsupported stdlib bridges into the output; repair those shapes as
+   described under Class Stdlib. The documented explicit compiler opt-in
+   resolved Syn's inheritance opt-in diagnostic in the inspected 2.4.20
+   run with strict warnings retained. It did not fix the runtime's two
+   iterator casts or redundant Elvis expression.
 
-   ```kotlin
-   tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().configureEach {
-       if (name.startsWith("compileSwiftExport")) {
-           compilerOptions.allWarningsAsErrors.set(false)
-       }
-   }
-   ```
-
-   > **This is NOT the gap-#8 anti-pattern.** Gap #8 forbids this exact
-   > block when it is used to silence unchecked-cast warnings in the
-   > bridge for *your own* public API — because there you fix the source
-   > (rename it, make it `internal`, or use a named `fun interface`). The
-   > distinction is *whose code emits the warning*: gap #8 = your bridge
-   > (fix source, never relax); gap #9 = the generated
-   > `KotlinCoroutineSupport.kt` coroutine runtime (no source exists,
-   > relax is the only option). Before relying on 9b, confirm with the
-   > gap-#8 audit grep that your own bridge files have zero unchecked
-   > casts; if they do, fix those at the source first. Do NOT delete this
-   > block as "the forbidden gap-#8 block" — it is load-bearing for any
-   > Flow-exporting repo.
+   Concrete constructor bridges also emitted
+   `return run { _result; true }` after initialization and produced
+   `UNUSED_EXPRESSION`. A nominal callback fixed its separate Function1
+   cast without fixing that constructor conversion. Preserve these
+   distinctions in the evidence. Verify any generator/runtime repair
+   through regeneration and strict compilation; a proposed rewrite or
+   successful source compilation is not a completed bridge repair.
+   Do not patch generated bridge sources, suppress diagnostics, or edit
+   installed compiler/cache JARs to manufacture a passing gate.
 
    **9c — Disable the Kotlin/Native incremental cache.** Linking the
    Swift Export binary builds a K/N cache for `…_swiftExportMain.klib`,
@@ -781,13 +795,12 @@ become deletable.
    `platforms: [.macOS(.v14)]`. If a prior failed run cached a bad
    manifest, clear `swift-test-harness/.build` once.
 
-   **Where Flow-exporting symbols live in the generated package.** With
-   9a on, the SPM package gains `KotlinCoroutineSupport` and
-   `OrgJetbrainsKotlinxKotlinxCoroutinesCore` targets and
-   `CrosstermLibrary` lists both — confirmed working end-to-end on
-   `crossterm-kotlin` (`swift test` → 1 test, 0 failures). Canonical
-   reference: `crossterm-kotlin/build.gradle.kts` (the four fixes) +
-   `swift-test-harness/Package.swift`.
+   **Where Flow-exporting symbols live in the generated package.**
+   Inspect the emitted SPM targets and dependencies, including
+   `KotlinCoroutineSupport` and the exported coroutine library. The
+   historical crossterm smoke result under the former warning exception
+   does not establish that current strict compilation and tests pass.
+   Record fresh results for the exact source, plugin and configuration.
 
 ## Recipe for replacing `kotlin.Result<T>` in a public API
 
@@ -1522,11 +1535,121 @@ Swift Export's generated bridge fails `allWarningsAsErrors=true` in four distinc
 
 **Class Stdlib (the fourth class) — warnings in *auto-generated* `KotlinStdlib.kt`.** Public `kotlin.Result<X>`, classes extending `RuntimeException` / `Exception` / any `Throwable` subclass, public `MutableList<X>`, public `MutableMap<K, V>` each drag the `Throwable.getStackTrace()` → `Array` bridge or the `MutableList`/`MutableMap` bridge into the generated `KotlinStdlib.kt`, which then fails Unchecked-cast under `-Werror`. Fixes:
 
-- **Public `kotlin.Result<T>`** → sealed `Outcome.Ok(value: T) | Outcome.Err(error: SomeError)`, where `SomeError` does NOT extend `Throwable`.
+- **Public `kotlin.Result<T>`** → a named, concrete success/failure API for the exported value type, with a non-Throwable diagnostic. Merely replacing it with another generic result does not restore concrete Swift typing.
 - **`class FooError : RuntimeException(...)`** (or `Exception`) → data class / sealed class that does NOT extend any `Throwable`. Kotlin callers that need to throw it wrap in their own throw site.
 - **Public `MutableList<X>` / `MutableMap<K, V>`** → internal-backed `List<X>` / a custom read-only Map wrapper; internal helpers do copy-and-replace to keep the read-only public surface.
 - **Public `Pair<A, B>`** → named record class.
 - **Public `() -> X` / `(A) -> B`** function types → `fun interface` SAM type. Swift Export can't bridge raw Kotlin function types.
+
+### Diagnostic APIs: repair the exported types, not their aliases
+
+`Swift.Error` name collisions and unsupported exception inheritance are
+separate problems. Rename the actual Kotlin declaration to a distinct
+name where needed, and repair its actual superclass and parameter types.
+Renaming `Error.kt`, adding `typealias SynError = Error`, or renaming an
+exception subclass to `SynError` does not stop re-exporting its raw
+Kotlin/Native functionality. Keeping `typealias Error = SynError` also
+retains the colliding exported name. Generated namespace aliases must be
+traced to their underlying declaration; they are not evidence that its
+API has been repaired.
+
+The Syn bridge audit exposed this concrete chain before the diagnostic
+redesign:
+
+```text
+SynError : IllegalArgumentException
+  → exported Throwable constructors and getStackTrace()
+  → Array<String> stack trace
+  → erased Array<Any?> receivers in Array get / iterator / set / size
+  → four unchecked-cast diagnostics in KotlinStdlib.kt
+```
+
+Its `new`, `newAt` and `newSpanned` message factories also accepted
+Kotlin `Any`. Their generated Swift parameters were
+`any KotlinRuntimeSupport._KotlinBridgeable`, even though callers needed
+text. Renaming the class cannot repair those factory signatures.
+Warnings in `KotlinStdlib.kt` therefore do not, by themselves, establish
+that the only remedy is an upstream compiler change.
+
+The required source repair is:
+
+1. Make `SynError` an actual non-Throwable diagnostic, with no exception
+   superclass. Preserve its message, span and compile-error operations.
+   Preserve the same diagnostic object when propagating a failure result.
+2. Use concrete, non-null Kotlin `String` messages in the diagnostic
+   property and every exported message factory or constructor. Format
+   other values into text at the caller. Do not keep an `Any` overload
+   that reintroduces the erased exported parameter.
+3. Migrate `catch (error: SynError)` and `throw diagnostic` sites
+   deliberately. Prefer result-based propagation in the original parse
+   order. A Kotlin `OrThrow` boundary can throw an internal exception
+   carrying the original diagnostic; do not publish another Throwable
+   subclass as its replacement. Record source and binary compatibility
+   changes and rebuild consumers. A generated function named `getOrThrow`
+   is not evidence of a Swift `throws` contract.
+4. Provide concrete result types at Swift-facing boundaries that need
+   typed success values. A non-Throwable diagnostic does not by itself
+   solve the generic `SynResult<T>` erasure described above.
+
+**Verify the repair in regenerated output, not just the source diff.**
+Record the source revision, resolved plugin version and configuration,
+target/build type, generated compilation inputs and their hashes.
+Inspect both the module's `.swift` declarations and its Kotlin bridges,
+then follow dependencies into `KotlinStdlib.kt`:
+
+- `SynError` must no longer inherit the exported Kotlin exception class;
+  its message property and message parameters must emit `Swift.String`.
+- The Throwable constructors, `getStackTrace()` and four Array receiver
+  casts brought in by that diagnostic must disappear. If they remain,
+  identify the other exported declaration keeping them reachable.
+  Inspect newly exposed stdlib shapes as well; removal of one chain
+  does not prove the entire export surface is clean.
+- Retain identity, message/span and failure-path regression tests and
+  exercise the concrete diagnostic/result API from the Swift harness.
+  Keep `allWarningsAsErrors=true` through bridge/runtime compilation
+  and run the actual Swift tests. Generation, linking, skipped tests and
+  earlier results for a different revision are not current test passes.
+
+The non-Throwable/String redesign addresses this source API chain.
+Bundled coroutine warnings and concrete Unit-conversion warnings require
+their own evidence and validated repairs; neither disappears merely
+because the diagnostic was renamed or redesigned.
+
+### Result APIs: retain concrete success and diagnostic types
+
+Apply the same source-level repair to `SynResult` at public operations
+whose success type is known. In the inspected generated Swift,
+`SynResult.success`, `Success.value`, `getOrThrow`, `getOrElse` and
+`fold` use optional `KotlinRuntimeSupport._KotlinBridgeable` values.
+The absence of an unchecked-cast diagnostic does not restore the lost
+success type. A sealed-case wrapper around an erased payload does not
+restore it either.
+
+Use an actual, non-generic result class for each concrete public
+contract: `FileParseResult` for `parseFile`, Syn's `TokenStreamParseResult`
+for token transformations, and the consumer's `ArgsParseResult` for
+async-trait arguments. Each class has a concrete nullable `value`, a
+nullable non-Throwable `SynError`, and exactly one populated field.
+Private constructors and concrete success/failure factories enforce
+that invariant. Conversion must retain the original value or diagnostic
+object.
+
+Change the operation's actual return type. Do not use
+`typealias TokenStreamParseResult = SynResult<TokenStream>`, inherit
+from `SynResult<TokenStream>`, substitute `Any` for the payload, or
+hide the operation while leaving no equivalent concrete API. Generic
+results can serve algorithms whose parser callbacks genuinely choose
+arbitrary types, but that does not justify exposing an erased result
+from an operation with a known output. Public generic `fold`/`map`
+callbacks must not reintroduce the same erased result surface.
+
+Record the source and binary signature changes, migrate callers and
+rebuild compiled consumers. Regenerate the bridge and inspect the
+operation return, factory arguments, result properties and accessors.
+Swift consumer tests must assign the success payload to its concrete
+type and use the diagnostic's `String` message without forced casts.
+Run those tests through the full strict KMP gate. Neither a Kotlin-only
+test nor a warning-free but erased declaration proves this contract.
 
 ### Annotation hiding is not an API repair
 
@@ -1637,7 +1760,7 @@ Inspect commonMain for **all** of these, not just whatever last tripped CI:
 1. `runs-on:` on `swift.yml` is `macos-26`; no `setup-xcode` action.
 2. Public mutable collection surfaces (`MutableList`, `MutableMap`, `MutableSet`) → read-only Kotlin types + internal copy-and-replace helpers.
 3. Public generic types / SAMs / function-type surfaces -> **first choice: de-generify** (concrete named subtypes, `fun interface` SAM with a real name, internal generic base). See "Project goal: strongly-typed public APIs" above.
-4. Public `kotlin.Result<X>` / `Throwable` subclasses → sealed Outcome types + non-Throwable error classes.
+4. Public `kotlin.Result<X>` / `Throwable` subclasses → concrete outcome APIs and non-Throwable diagnostic classes; use `String` messages, migrate catches deliberately, and verify that regenerated output removes the inherited Throwable/Array chain and erased message parameters.
 5. Public `Pair<A, B>` helpers → named record class.
 
 Run the gate after every repair, not just at the end:
@@ -1766,3 +1889,206 @@ predicates bridges cleanly.
 `Type` / `Error` / `Result` became `SynType` / `SynError` / `SynResult`,
 and the compatibility aliases were removed after CI proved aliases are
 exported too.
+
+## Reproducing the isolated Kotlin 2.4.20 Swift bridge repair (2026-10-20)
+
+This is a diagnostic reconstruction of the released exporter, **not an installed compiler replacement or a product rollout**. The generated Native and Swift code compiles strictly and **all twelve Swift/Flow tests pass under Swift 6 with warnings as errors**. Three earlier sendability errors were corrected in the fixture's ownership model, without further runtime/exporter changes. No Syn/Libc/Async/Image integration, full KMP gate, CI, release or Maven publication is established by this experiment.
+
+### Inputs and isolation
+
+Use the existing artifact directory, relative to the workspace root:
+
+```
+automation-artifacts/2026-10-20-syn-isolated-exporter-integration
+```
+
+The host was EmberHarmony.local, Xcode 26.6 build 17F113, Apple Swift 6.3.3 (`swiftlang-6.3.3.1.3`), with the fixture targeting macOS ARM64 15.0. KGP/compiler/exporter are **2.4.20**; coroutines is **1.11.0**. The original exporter JAR SHA256 is `24c6159bcf0087ecf86bfc9bad01a975e192abcf75005b248292d85a139c2055`; the isolated final exporter SHA256 is `170771a2b55387a94ab1adab9ecd259c3eed9d7622997150f259cb8069896a37`. ZIP timestamps can change a rebuilt archive's whole-file hash: verify its entry contents and class audit, rather than assuming archive-byte reproducibility.
+
+All six upstream source files are pinned to official Kotlin revision **890ac1d94fdb80eb85f0eeb5be5e4352df987b2f**, resolved from v2.4.20:
+
+- `native/swift/sir-providers/src/org/jetbrains/kotlin/sir/providers/impl/BridgeProvider/TypeBridging.kt`
+- `native/swift/sir-providers/src/org/jetbrains/kotlin/sir/providers/impl/BridgeProvider/SirBridgeProviderImpl.kt`
+- `native/swift/sir-printer/src/org/jetbrains/sir/printer/impl/SirAsSwiftSourcesPrinter.kt`
+- `native/swift/swift-export-standalone/resources/swift/KotlinCoroutineSupport.kt`
+- `native/swift/swift-export-standalone/resources/swift/KotlinRuntimeSupport.swift`
+- `native/swift/swift-export-standalone/resources/swift/KotlinCoroutineSupport.swift`
+
+`producer-input-manifest.json` records each upstream path, Git blob, SHA256 and the sixteen exact compiler/exporter dependency JAR paths/hashes. Original files are in `producer-inputs/`; changes are in `producer-src/`. The Kotlin coroutine resource SHA256 is `cc30c61170e4a5fee58fcdda09539f30781cbada4c59389d99da8fed2a6f6d6f`. Its identity was also observed in 2.4.21, but **this exporter integration was tested only on 2.4.20**.
+
+`prepare-producer.rb` acquires the initial exact sources and hash-checks/copies the captured dependency inputs; it deliberately refuses to overwrite originals. `prepare-swift-strict-sources.rb` acquires the additional printer/Swift resources. The exact official reverse-provider API response is retained in `sir-provider-api.json`; `build-reverse-producer.rb` verifies/records its source. Do not use an unrelated local compiler source archive as the release source.
+
+`seed-isolation.rb`, `copy-native-inputs.rb` and `restore-native-dependencies.rb` copied dependency inputs into `gradle-home/`, `native-sdk/` and `konan-data/`, materializing input symlink targets as ordinary files. The restored `.extracted` receipt names only the three copied LLVM/libffi/lldb dependencies. The fixture's `kotlin.native.home` points to the copied SDK. Temporary files, Gradle/Konan/compiler caches, SwiftPM build/package/module caches, Java user/IDE directories and product outputs are inside the artifact directory. Installed compiler/dependency inputs were read-only; `input-reverification.json` independently rechecks all sixteen original/copied JARs. No Maven-local or sibling project substitution is involved.
+
+### Source changes and their purpose
+
+1. In TypeBridging's Kotlin conversion templates, consume the expression as the result of `run`, then transform it with `let`: Unit uses `run { expression }.let { }`, Boolean sentinels use `.let { true }`, nullable Nothing uses `.let { null }`, and the impossible reverse Nothing fallback uses `.let { throw IllegalStateException() }`. This evaluates the expression once, retaining effects and exception propagation without unused expressions.
+2. In Swift conversion templates, explicitly consume discarded bridge values with `_ = expression`. Give callback result locals their actual Swift type. For a Nothing-returning callback/reverse method, emit only the terminating call; do not create a Never local or append an unreachable return/fatalError. A forward noreturn C call already imports as Never and needs no extra fatalError. The failed explicit `return <Never>` to a Bool bridge attempt is preserved; the verified form is a terminating call statement.
+3. In the Kotlin coroutine resource, replace the completed-error Elvis with an explicit local error check followed by `return null`. Match opaque iterator receiver casts with `SwiftFlowIterator<*>`/`<*>?` and the continuation payload with `SwiftFlowIterator<*>.Value?`, avoiding invariant unchecked casts while preserving the actual inner payload.
+4. In the printer and both Swift runtime resources, replace deprecated implementation-only imports with `internal import`, following [Swift SE-0409](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0409-access-level-on-imports.md). In KotlinRuntimeSupport.swift remove the same-type `[Any]` forced cast and replace the optional-only protocol-wrapper cast with its explicit unwrap. In KotlinCoroutineSupport.swift use `catch is CancellationError` instead of binding an unused error.
+
+There are no generated-source rewrites, warning suppressions, diagnostic severity changes, library-evolution flag workaround, Objective-C API decorators or `@JvmName` changes. The fixture applies the documented module-level `InternalForInheritanceCoroutinesApi` opt-in required by the generated Job implementation; this is explicit API consent, not a warning waiver.
+
+### Build and verification commands
+
+Obtain an explicit shared local slot before any compiler/build/test command. A returned `execution-grant.json` is intentionally inactive: the coordinator must grant a new run. Iris is excluded and must not be started, resumed or messaged. Keep the completed inspection receipt; do not reinterpret it as permission to interact with Iris.
+
+From the artifact directory, archive existing logs before a new experiment, then run sequentially:
+
+```sh
+ruby build-producer.rb
+ruby prepare-swift-strict-sources.rb
+ruby build-printer.rb
+ruby build-reverse-producer.rb
+ruby package-producer.rb
+ruby run-fixture.rb baseline
+ruby run-fixture.rb patched
+ruby run-swift-tests.rb
+ruby prepare-serial-tests.rb
+ruby run-swift-serial-tests.rb
+ruby compare-abi.rb
+```
+
+The baseline fixture is an **expected failure described below**; the corrected full Swift suite must succeed with twelve executed tests. Inspect each result before proceeding, rather than chaining with `&&` or treating every nonzero exit as the same failure. The serial subset is retained for historical comparison and is not a substitute for the full suite. Compiler args, environment, source hashes, exits and logs are persisted by each runner. The scripts contain the exact captured classpath and input selection; `exporter-selection.init.gradle` replaces only the exporter on the original sixteen-JAR worker classpath, including the IntelliJ coroutine dependency. An ordinary Gradle-resolved replacement classpath previously lost that dependency and was rejected.
+
+The source-only producer reconstruction uses the copied 2.4.20 K2JVMCompiler with `-Werror`, module-specific friend path/name, JVM target 1.8 and no-compatibility default methods. This JVM invocation builds the exporter implementation; product validation is Native/Swift. Official sources contain newer square-bracket Pair destructuring syntax: the build scripts normalize only compiler inputs to equivalent parentheses in both controls (ten TypeBridging sites, three printer sites and four provider sites). Acceptance requires original versus rebuilt-baseline instruction equality for every packaged class, not merely successful compilation.
+
+The JAR audit checks **6263 entries**, no additions/removals, exactly **nine classes plus three resources** changed. Nine original/baseline/patched `javap -p -s` signatures match; baseline `javap -p -c` instruction blocks match original after constant-pool index normalization and member-order-independent comparison. The initial printer mismatch was only method ordering; no instruction differences were waived.
+
+`run-fixture.rb` invokes the read-only Gradle 9.8.0 distribution's `embedSwiftExportForXcode --continue --no-daemon --max-workers=2 --no-configuration-cache`, writes variant-separated output, and requires `allWarningsAsErrors=true` for actual generated Native compilation. `run-swift-tests.rb` uses SwiftPM with Swift 6 test sources and `-Xswiftc -warnings-as-errors`. Its explicit `-target arm64-apple-macosx15.0` aligns dependency compilation with the fixture's declared target: the generated package itself omits a deployment minimum. This proves macOS 15 compatibility, not support for older Apple OS versions.
+
+### Verified results and remaining limits
+
+- Final baseline session **12504** exited 1 with the expected **29 Native warnings**: 26 unused expressions, one redundant Elvis and two unchecked casts. Baseline generation and its Swift modules succeeded; strict Native compilation prevented a baseline linked binary.
+- Final patched session **56059** exited 0: actual exporter generation, strict generated Native compilation, static linking, SPM generation and embedding passed. Earlier patched **95692** also exited 0, but was the initial Native-only candidate, not a Swift/Flow behavior pass.
+- Historical full Swift session **18167** exited 1 after generated Swift compiled cleanly. Three fixture tests shared non-Sendable iterator/probe captures across Task boundaries: suspended producer/resumption, cancellation while waiting for the producer, and concurrent-next rejection. The source and failed diagnostics are preserved under `sendability-review/`. These are fixture ownership errors, resolved by the actor correction below; no unchecked Sendable conformance or relaxed language mode was introduced.
+- Final full Swift session **48138** exited 0: **all twelve Swift Testing cases executed and passed, zero failures**, using Swift 6 and `-warnings-as-errors`. This includes all three formerly failing concurrency cases. The exporter JAR, generated product source and runtime resources were unchanged for this correction.
+- Separate serial session **31865** exited 0: **nine actual Swift Testing cases passed**, preserving original test bodies. These exercise constructors/setters, both Unit callback directions, nullable Nothing, String order, full-width UInt, nullable object payloads, empty/repeated completion, exact original Kotlin error identity, iterator release before start and cancellation of a backpressured producer on release. `serial-subset.json` records the full/subset hashes and three omitted compile-blocked cases. This is explicitly a partial behavior result, not a green full-suite gate.
+- The original repeated-error expectation was corrected against [Apple's AsyncIteratorProtocol contract](https://developer.apple.com/documentation/swift/asynciteratorprotocol): after an error, future next calls must return nil. The final test checks the first wrapped error against the producer's original object and then checks repeated terminal nil; no runtime behavior was changed to satisfy this correction. The fetched official text is retained in `asynciteratorprotocol.md`.
+- Final ABI session **35990** exited 0. All **five generated C headers are byte-identical**, and all **37 declared Integration C exports** exist in the patched static library. Compiled Swift API dumps for Integration, KotlinRuntimeSupport and KotlinCoroutineSupport have identical declarations after excluding import nodes. Complete raw dumps differ by the expected ImplementationOnly import attributes; they are retained, not described as identical. This is not a cross-version binary compatibility guarantee: there is no strictly linked baseline binary.
+
+Never callback signatures/generation compile, but no deliberately fatal Swift Never callback was executed. Other Apple targets, 2.4.21 exporter execution and all product KMP/Swift integration gates remain unverified. The twelve-case isolated full suite is green; the earlier nine-case subset remains historical evidence.
+
+### Correct Swift 6 ownership in the concurrency fixture
+
+All three diagnostics pointed to fixture Task initializers. A closure captured a non-Sendable iterator associated with a probe still used by the caller. Declaring those exported reference types Sendable would assert a broader concurrency contract and was not required. The verified correction is the private `SuspendedFlowReceiver` actor in `swift-harness/Tests/ExporterIntegrationTests/BridgeTests.swift`:
+
+- Construct and retain both the FlowProbe and its iterator inside the actor. Tasks capture only that actor; probe and iterator references never cross its boundary.
+- In its receive method, take a local reference to the iterator and use `try await iterator.next(isolation: self)`, the standard [isolation-aware AsyncIteratorProtocol API](https://developer.apple.com/documentation/swift/asynciteratorprotocol/next(isolation:)). It is available from macOS 15, matching this fixture. The installed SDK's protocol extension and Apple's exact API documentation were read and recorded in `sendability-review/next-isolation.md`.
+- Return only Sendable String?/Int32/Bool observations. Read the Kotlin probe's existing thread-safe start-count/stopped state inside the actor, with a five-second deadline and suspending one-millisecond clock sleeps. The exported non-Sendable probe is not sent to a second executor merely to await a signal.
+- Actor reentrancy while the first receive is suspended allows the second actor call to exercise the real Kotlin concurrent-receiver guard. The test still requires rejection, releases the producer, verifies the first receiver gets its value and verifies completion/finalization. Cancellation still cancels the actual pending receiver Task, requires CancellationError and checks the producer finally block.
+
+No tests were removed, no unsafe Sendable declaration or suppression was added, and no runtime/exporter change was needed for sendability. After an explicit coordinator regrant, run the existing `ruby run-swift-tests.rb` once; final session 48138 built, linked and executed all twelve cases successfully. `sendability-review/classification-and-candidate.json`, `actor-full12.log` and `actor-full12-result.json` preserve exact source hash, diagnosis and result. No ABI rerun is needed for this fixture-only change; the audited exporter/runtime/native inputs and their ABI receipt remain unchanged.
+
+### Return and cleanup boundary
+
+All owned compiler/build/test commands exited and the local slot was explicitly returned in `local-slot-return.json`; the active grant is false. Preserve source manifests, input copies, scripts, full failed/passing logs and ABI receipts. Reverting this experiment requires no installed compiler or cache restoration because those were never changed. Do not delete shared inputs or other owners' artifacts. Any removal of this artifact directory should be a separately authorized cleanup after retaining its evidence. Product adoption, installed deployment, CI/publication and fleet rollout require separate approval and their own full gates.
+
+### Actual syn-kotlin isolated validation (2026-10-20)
+
+This follow-up used the existing shared `syn-kotlin` checkout at **3cfb17f796a13499be94019cd88947420ad36768**, with the same verified exporter SHA256 **170771a2b55387a94ab1adab9ecd259c3eed9d7622997150f259cb8069896a37** and official Kotlin 2.4.20 revision **890ac1d94fdb80eb85f0eeb5be5e4352df987b2f** described above. It is an actual-library validation attempt, **not a green integration gate**. No replacement exporter incorporating the later enum candidate has been compiled or verified.
+
+All paths below are relative to the workspace root. The owned artifact directory is `automation-artifacts/2026-10-20-syn-isolated-library-validation`. Its `inputs.json` records the exact source/configuration hashes, original SDK and generated-output baseline, exporter hash and copied inputs. `prepare-inputs.rb` requires the recorded clean source revision and materializes dependency/SDK inputs as ordinary files in this directory. It copies input binaries, never a Syn source snapshot. Installed Gradle/Native inputs, the shared dependency caches and the existing project Android SDK are read-only; no Maven-local or sibling substitution is used.
+
+The source preparation introduced two narrow changes: avoid rewriting an already identical `local.properties`, and let the real Swift harness's Package.swift read `KOTLINMANIA_SWIFT_EXPORT_BUILD` while retaining `../build` as the default. The six existing Swift test bodies were unchanged. The tested build-script formatting was subsequently corrected to put its multiline initializer on the next line; that correction has not been rebuilt and must not be described as the exact tested source.
+
+After a fresh serialized LOCAL grant, the exact entry points are:
+
+```sh
+cd /Volumes/stuff/Projects/kotlinmania/automation-artifacts/2026-10-20-syn-isolated-library-validation
+ruby prepare-inputs.rb
+ruby run-library.rb preflight
+ruby run-library.rb gate
+ruby verify-published-metadata.rb
+ruby correlate-consumed-dependencies.rb
+ruby audit-generated-api.rb
+```
+
+Preparation refuses unexpected source state; do not overwrite a previous run or re-activate its grant to repeat this sequence. Use a newly allocated owned artifact directory and reviewed input manifest for a subsequent revision. The current grant is inactive. The gate expands to `CI=true test build --continue --no-daemon --max-workers=2 --no-configuration-cache`, with `--project-cache-dir` and an init script inside the artifact directory. It is a full KMP gate, not a JVM smoke test. `logs/gate-invocation.json` preserves every argument and environment value.
+
+`isolation.init.gradle` sets layout.buildDirectory before project configuration, selects only the verified exporter on the original compiler worker classpath, redirects Node/Yarn locks and SwiftPM dependency checkout paths, and rejects declared task outputs outside the artifact root. Gradle, Konan, Kotlin persistent state, Java temporary/user/IDE directories, Android user/AVD state, Swift/Clang module caches, npm/Yarn caches and all products are isolated. `native-sdk/` and `konan-data/` are owned input copies. The init script removes only the known appended GenerateSPMPackage action that rewrites generated source/manifest; the real generation action remains. Preflight observed StandardTaskAction plus AbstractTask$TaskActionWrapper. The later action receipt captured a mutable action list after mutation, so its original_actions field is incomplete; the preflight inspection and removed-wrapper field are the evidence for the two-action starting state.
+
+The strict Swift build uses `strict-swift.xcconfig` with warnings as errors. `run-real-swift-tests.rb` invokes the existing shared `swift-test-harness` with artifact-local SwiftPM scratch/package/config/security/module paths, Swift 6 and `-Xswiftc -warnings-as-errors`, targeting macOS ARM64 15.0. It replaces the outer smoke runner's nested Gradle invocation, retaining the real embed dependency and six real test bodies. No generated output was patched to force a pass.
+
+Observed results:
+
+- Session **49789** performed actual Native compilation/static linking and the full KMP task graph. Fresh XML reports contain **3,896 passing cases, zero failures/errors/skips across eleven environments**: JVM 356; macOS ARM64, Android host, JS browser/node, Wasm JS browser/node, Wasm WASI node, iOS simulator ARM64, tvOS simulator ARM64 and watchOS simulator ARM64 each 354. `actual-test-results.json` records every XML hash. This is no claim of Windows/Linux runtime execution or Android device execution.
+- **Zero of the six real Swift tests executed.** Strict dependency SPM compilation failed on six exhaustive `Delimiter`/`Spacing` switches with unreachable `default: fatalError()`, at generated ProcMacro2 Swift lines 21/32/71/83/92/125. `logs/current-spm-diagnostics.json` and the decoded Xcode activity log preserve the diagnostics.
+- The fresh KGP report records four failed tasks: `macosArm64DebugBuildSPMPackage`, `detektMacosArm64SwiftExportMainSourceSet`, `ktlintKotlinScriptCheck`, and `runKtlintCheckOverMacosArm64SwiftExportMainSourceSet`. Detekt identifies the generated coroutine resource's unused private `Throw` class at line 127 and reports three analysis compiler errors. The source build-script lint error was at line 173; its formatting correction is source-only. The generated-source ktlint task's precise exception was not recovered before client loss; it remains an unclassified failure, not an assumed filter defect.
+- The exec connection was lost before the outer runner could write `gate-result.json`. Its owned daemon log explicitly records client disconnection, build cancellation and daemon shutdown. The fresh KGP build report records the failures, but there is no reliable numeric process exit or final full-gate completion. `local-slot-return.json` records this distinction; no cancellation/restart was requested by this worker.
+- `generated-api-abi.json` verifies **six byte-identical generated C headers** against the retained pre-existing baseline and identical selected public declaration lines in seven generated Swift files. All **7,300 forward Syn C exports** are present in the actual Native static library, SHA256 `2d39857573e887eee5e37a4beb4091f0d475c94f9ed53efb1d861e2b486e5fed`. The **774 reverse Swift declarations** and a complete compiled real-library Swift API/ABI comparison remain unverified because SPM failed. Declaration-line comparison is not a complete binary ABI proof.
+- The corrected independent Central audit fetched metadata for 108 coordinates and matched 142 of 156 copied binary candidates. Fourteen unmatched older Quote cache candidates were preserved, not silently replaced. The fresh KGP compiler-argument report exposes four consumed JVM JAR paths; all four match Central SHA256 metadata, including Quote. This limited path coverage does **not** prove all consumed Native/Android artifacts. `published-metadata-verification.json` and `consumed-dependency-verification.json` record the scope. The older filename-based verifier used incorrect KMP URLs; its 404s are not evidence of an unpublished dependency.
+
+Source-only producer analysis fetched and read `native/swift/sir-light-classes/src/org/jetbrains/sir/lightclasses/nodes/SirEnumFromKtSymbol.kt` at the same official revision (blob `b568e90314c57fbd493a1554a2bab395a753331d`). The candidate omits the fallback only in the three exhaustive nonempty switch-self bodies, retaining empty-enum and integer-input fallbacks and invalid-string validation. `enum-producer-analysis.json` and the original/candidate/diff record it. **No compiler, class ABI, packaging or behavior validation has run on that candidate.** It must not replace the proven artifact for another owner's build until separately validated.
+
+The full real-library gate remains blocked by strict exporter diagnostics and generated-source lint, plus the interrupted aggregate and the unretested formatting correction. The earlier twelve-test fixture remains valid fixture evidence only. Installed tooling and shared caches require no rollback because they were not modified. Preserve raw receipts/logs and coordinate the next serialized build; do not delete inputs, deploy the exporter, publish a toolchain/library, or imply fleet adoption from this validation.
+
+### Swift language-mode qualification and enum follow-up preparation
+
+The retained Syn Xcode compiler activity confirms `KotlinRuntimeSupport` was compiled with **`-swift-version 5 -warnings-as-errors`**. A Swift tools 6 test harness does not force a generated tools 5.9 dependency package into Swift 6 mode. The twelve passing fixture test cases are real Swift 6 test-target evidence; they are **not** proof that every generated dependency module compiles in Swift 6 language mode. `automation-artifacts/2026-10-20-syn-isolated-library-validation/swift-language-mode-review.json` records the observed command and activity-log hash.
+
+Libc's subsequent isolated run explicitly enabled Swift 6 for generated dependencies and reported that the exported `KotlinError: Error` value stores a non-Sendable `KotlinBase`. This is separately observed Libc runtime evidence, not a new Syn run, and no `@preconcurrency`, unsafe Sendable declaration or language downgrade has been applied as a repair. A complete Swift 6 generated-runtime gate remains unverified.
+
+The parent-authorized enum follow-up is prepared under `automation-artifacts/2026-10-20-syn-isolated-library-validation/enum-repair/`. Its inactive grant, frozen input hashes, bounded allocation request, official baseline/candidate compiler and class/JAR audit scripts, strict generation runners, six Swift enum behaviors and lint-provenance plan are inspectable there. No producer compile, fixture generation or new test has executed in this follow-up. The enum tests cover empty/single/multiple cases, descriptions and ordinals, invalid/extreme inputs and actual Native reference round-trips. This diagnostic isolation of the enum family must record generated dependency language modes and cannot establish that the separate Swift 6 runtime issue is fixed. Preserve the earlier interrupted real-library result and 3,896 passes as historical exact-revision evidence; no new full KMP result is claimed.
+
+### Bounded enum result and immutable runtime diagnostic candidate
+
+The bounded follow-up used unchanged clean Syn **61290caba7ebe4d23ee5ef613d70634f08bd4434**. Both official baseline and candidate producer compilations passed `-Werror` in session **89168**. Packaging did not pass: audits 69252/7856/20102 rejected reconstruction differences. Constant-pool indices, `ldc`/`ldc_w` widths and instruction-label relocation explain some differences, but unchanged `SirEnumFromKtSymbol.attributes_delegate$lambda$0` still differs in local register allocation and instruction/control layout. No broader difference was waived. Raw disassemblies and method-graph differences remain under `enum-repair/logs/`. No candidate JAR was produced; zero enum embeds/Swift tests executed.
+
+Lint dry run **4284** exited 0 but includes `compileKotlinMacosArm64` and `macosArm64DebugSwiftExport`, so no diagnostic execution was allowed or attempted. Initial sandboxed wrapper 39490 failed before Gradle initialization because its lock-contention socket was denied; the same dry run succeeded with reviewed socket access. `enum-repair/local-slot-return.json` records all terminal sessions and inactive allocation. Session 49789 was not restarted; no new full gate supersedes its historical 3,896 cases.
+
+Sydney directed resetting expectations against Rust semantics rather than preserving current code as dogma. The full existing Syn `tmp/syn/src/error.rs` and `thread.rs` were read: diagnostic messages are owned Strings; span access is thread-bound and falls back to call-site on other threads. Libc's owner independently reviewed its raw status/errno API and found no original Throwable-object identity requirement. This supersedes the experiment's earlier requirement to preserve unrestricted Swift `KotlinError.wrapped` object access.
+
+The uncompiled/unpackaged source candidate is `automation-artifacts/2026-10-20-syn-isolated-library-validation/runtime-snapshot-repair/producer-src/KotlinRuntimeSupport.swift`, SHA256 **69ce24e6cad0169a25a129d79cc597883c8359e23d6f3241a485c41f0c6fee25**. `KotlinError` stores only `public let message: String`; description returns it. `init(wrapped: KotlinBase)` retains its synchronous call signature, immediately captures the existing message/fallback expression, and stores no Kotlin object. `init(message: String)` constructs an owned diagnostic directly. Removing public mutable wrapped is intentional API change, not an ABI-neutral rename or unchecked assertion. The two confirmed synchronous/asynchronous producer construction sites retain their calls; strict compilation must verify the source-level compatibility.
+
+`runtime-snapshot-repair/candidate-contract.json` pins the resource/Rust inputs with verified=false. Prepared fixture changes retain all twelve behavior scenarios, replace object identity with diagnostic stability after source-message mutation, and add a detached-task throw/catch test: thirteen candidate cases. MutableStateFlow protects the source-message mutation. No fixture case was deleted, no generated output edited, and no unsafe Sendable/preconcurrency/handle workaround or warning waiver introduced. Libc independently reviewed this source contract, not its compiler result.
+
+Next runtime validation must explicitly compile generated dependencies in Swift 6 with warnings as errors. The earlier dependency-mode-5 fixture does not prove that coroutine Task captures or generic continuation transfers satisfy Swift 6. Fresh producer generation, actual untouched-runtime regression, all thirteen fixture cases and real-library exact-head gates remain unverified, and require fresh serialized allocations. The proven exporter SHA170771a2 remains unchanged and does not contain this candidate. No installed tooling, shared caches, rollout or publication changed.
+
+### Resource-only snapshot validation under explicit Swift 6
+
+The next authorized bounded allocation froze 31 input files in `runtime-snapshot-repair/frozen-inputs.json` (manifest SHA256 `5cb83fe08d538705177840f59e6ae86c30f1addde01459273ee7a31c5deb1142`) and retained product checkout **61290caba7ebe4d23ee5ef613d70634f08bd4434** unchanged. Exact runners in that artifact directory are `package-runtime.rb`, `run-runtime-fixture.rb baseline`, `run-runtime-typecheck.rb baseline`, `run-runtime-fixture.rb corrected`, then the remaining corrected typecheck/13-test runner only when authorized and module compilation is green. Do not execute this list blindly: inspect each result and stop on a new unexpected diagnostic.
+
+`package-runtime.rb` session **79691** exited 0. The candidate JAR is `runtime-snapshot-repair/toolchain/runtime-snapshot-swift-export-embeddable-2.4.20.jar`, SHA256 **7b0007f8f93843a0bcf785cd6fc4d85f2540f14e808f07a62595cb53b61c8695**. The full 6,263-entry audit proves exactly `swift/KotlinRuntimeSupport.swift` changed, zero class changes, no additions/removals. The proven SHA170771a2 JAR is unchanged. No K2 recompile or enum-class packaging occurred.
+
+Both tiny fixture builds use explicit `SWIFT_VERSION = 6.0` and warnings-as-errors in the owned Xcode config; recorded frontend commands verify language mode 6 for KotlinRuntimeSupport, KotlinCoroutineSupport, ExportedKotlinPackages and the exported coroutines module. All Gradle/Konan/product/cache writes stay in the existing owned artifact root; installed/shared caches remain read-only. The actual fixtures and thirteen candidate behaviors use the new owned-message contract described above.
+
+- Baseline build **37556** exited 1 and reproduced the exact non-Sendable `KotlinError.wrapped` error. Native compilation and static linking passed. This is the expected negative, not a product pass.
+- Pre-typecheck wrapper **47234** launched no Swift compiler: a strict resource-hash assertion discovered the exporter appends exactly one trailing LF. Full byte comparison proved that sole difference, and `input-manifest.json` pins the actual untouched generated runtime/C inputs. No generated output was changed. The generated baseline runtime SHA256 is `59c15fb0cf52f6002a4848b491593031fbcc021ed8902a132dca1691db12f8dd`, distinct from the raw JAR resource hash.
+- Baseline focused regression **85939** returned wrapper exit 0 because the actual Swift compiler exited **1** with the exact expected Sendable diagnostic under `-swift-version 6 -warnings-as-errors`. `logs/baseline-result.json` preserves both statuses.
+- Corrected build **40499** exited 1 on the next producer family: generated KotlinCoroutineSupport.swift lines **66 and 91** capture non-Sendable `KotlinTask` in `@Sendable` cancellation closures. Native compilation/static linking passed. KotlinRuntimeSupport's corrected Swift 6 module was emitted successfully; its module hash and actual compiler modes are in `corrected-output-evidence.json`. This validates that module's snapshot correction, not the whole runtime or its behavior suite.
+
+The first new blocker stopped execution. The standalone corrected-output typecheck and **all thirteen behavior cases remain unexecuted**. `corrected-input-manifest.json` pins freshly generated untouched corrected runtime/C inputs for a future allocation. Four generated C headers are byte-identical between these two tiny fixture variants; this is not a real Syn/Libc binary ABI guarantee, and KotlinError's intentionally changed Swift public API is not ABI-neutral.
+
+All owned commands are terminal, the grant is inactive, and `runtime-snapshot-repair/local-slot-return.json` records the explicit return. Cancellation follow-up must preserve native-job/Swift-task cancellation and lifetime semantics; simply asserting Sendable or holding a lock around a native call is not a correction, because callbacks may re-enter Swift. No additional compile, retry, suppression, unsafe Sendable, generated-output edit, installed deployment, adoption, CI, full KMP repeat or publication followed this blocker.
+
+### Cancellation ownership follow-up: prepared, not executed
+
+A source-only candidate for the two Swift 6 cancellation captures is recorded under `automation-artifacts/2026-10-20-syn-isolated-library-validation/runtime-cancellation-repair/`. Its `producer-src/KotlinCoroutineSupport.swift` SHA256 is **f8acaaeb7f4f42a3ea1948b9e89265c5e16274f66dd2b674969d9b804055664c**. The bound KotlinTask remains non-Sendable. A checked `KotlinTaskState` protects the current-task handle, and a checked `KotlinCancellation` owns the bound native Job wrapper through Mutex storage. Native callbacks capture the checked state; Sendable cancellation handlers capture the checked owner. Native calls occur after releasing the owner mutex, with explicit lifetime extension on direct calls. No unchecked Sendable conformance, preconcurrency conversion or new Objective-C annotation was added.
+
+This is a candidate, not a proven ownership repair. `candidate-contract.json` explicitly requires compiler validation of sending parameters and Mutex-region transfers, review of inner externalRCRef lifetime at every generated conversion, and reentrancy checks for callbacks registered on an already-cancelled Job. The installed SDK explicitly marks UnsafeCurrentTask's Sendable conformance unavailable. Kotlin's [Job concurrency contract](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/) permits concurrent Job operations, but does not establish Swift wrapper lifetime. No lock may be held across a native callback-capable call merely to make a declaration compile.
+
+`run-cancellation-regression.rb baseline` is prepared against actual unchanged coroutine source generated in session40499, its emitted Swift6 runtimeSupport module, and the original C module headers. `baseline-input-manifest.json` pins these real inputs; no fake KotlinBase or generated-output patch is used. The expected negative requires actual nonzero compiler exit and the precise KotlinTask Sendable-capture diagnostic. A corrected mode requires separately pinned fresh producer output and compiler exit0. Neither mode has run. `prepared-allocation-request.json` freezes the candidate/negative inputs and requests a new bounded slot; current grant is inactive. All thirteen real fixture behavior cases remain mandatory and unexecuted in this new contract.
+
+Separately, the template owner received read-only actual-library KLIB receipts in `syn-local-klib-handoff.json` and `syn-native-dependency-path-handoff.json`. The existing macOS Syn KLIB is an unpacked77-file directory with content-tree SHA256 `e208fb3a4c249ff7f64f81d13cc9f40c0f55600820537eb8756f9d6f0c942786`; its source-root historical output is byte-identical to the isolated actual-library output. Actual source was compiled at3cfb17f; current61290ca changes only build-script formatting and all Kotlin source hashes match. Fixture Integration/EnumFixture KLIBs are not Syn library outputs. The retained report does not expose the Native compiler argument list; cached resolved-coordinate candidates are therefore qualified, not represented as proven consumed inputs. Atomicfu's main/cinterop files have distinct required identities; Quote has an older duplicate plus a current independently published-checksum match. No compilation/download/output recreation was performed for this handoff.
+
+### Lifetime review correction and test-parity qualification
+
+The cancellation candidate above at hashf8acaa is superseded by source SHA256 **374d75a6f978ba56cb3e56b55c822f5f10b15886e4f93d3dd25f13a06f881269** at the same candidate path. The prior source is retained, hash-checked, in `runtime-cancellation-repair/review-history/KotlinCoroutineSupport-f8acaa.swift`. Source review identified that the Swift forwarding getter does not itself inherit KotlinBase's NS_RETURNS_INNER_POINTER lifetime semantics. The candidate now explicitly encloses the entire forward `fn` invocation in `withExtendedLifetime(cancellation)`. Both official `swiftAsyncCall` generation and iterator.next execute their complete foreign call inside this nonescaping scope; direct setTask/cancel calls already extend self. This addresses the identified scope gap in source, not a compiler/runtime proof.
+
+All thirteen candidate scenarios are retained. The existing deterministic cancellation case additionally prepares eight concurrent cancel/release races, permits only successful released-value delivery or CancellationError, waits for producer finalization, and issues late cancellation after the receiver result/clear. The unsafe current-task handle is not copied out of its mutex. Source/race hashes and unproved reverse-transfer/cache-identity/reentrancy requirements remain in `candidate-contract.json` and `prepared-allocation-request.json`. No new compiler, JAR or test execution followed this review; no green fixture claim is made.
+
+The historical 3,896 XML cases also require a newly discovered qualification: **55 executions were empty SizeTest bodies**, five tests across eleven environments. Reading the entire matching Rust test file confirms exact full-value size assertions Expr176, Item352, Type224, Pat184 and Lit24, under compiler/pointer-width/span-location guards. They measure the inline enum value including payload and padding, not the discriminant alone. Current Kotlin AST roots are managed sealed classes without the asserted inline-value representation. Neither comments, counts, serialized lengths, fixed-size dummy buffers nor C structs unused by the actual parser would preserve those operations. The source-only statement mapping and required real-representation/actual-stride proposal are `automation-artifacts/2026-10-20-syn-dependency-repair/size-parity-review/statement-parity-review.json`. Those five false-green test bodies remain unrepaired; neither 3,896 XML cases nor the unaudited remainder establish Rust test parity. The owned historical JSON reports now carry this qualification while preserving their XML totals and raw evidence.
+
+### Bounded cancellation validation: expected negative and pointer-contract failure
+
+The next granted run used the frozen 57-input manifest `42bae75193cf8848add5eecf3bfd4a49c1fd97289db81fe9adec36a914b25b2e` under `runtime-cancellation-repair`. Packaging session71093 exited0: exactly `swift/KotlinCoroutineSupport.swift` changed atop snapshot JAR7b000, with zero class changes and no added/removed entries. The resulting experimental JAR SHA256 is `a44af057f5cfdf81b63a31f653605f377beeaa92558ced3c13a7831bc28fa193`.
+
+`ruby run-cancellation-regression.rb baseline` ran in session87418 against the untouched40499 output: actual Swift6/Werror compiler exit1 reproduced the KotlinTask capture diagnostic; wrapper exit0 means the expected negative matched. `ruby run-runtime-fixture.rb corrected` session10502 exited1 after30seconds/16 executed tasks. Native compile/static link passed. Swift compilation rejected three uses at coroutine source lines66/76/329 because the newly introduced forwarding method returns `UnsafeMutableRawPointer?` while native bridge parameters require nonoptional pointers. The raw compiler log hash is `39315e00058bc46ec2b67143a0b87ed84313e023513b1963835d0ddf0dc7cf7f`. No corrected standalone typecheck or behavior runner followed: **zero of thirteen behavior cases executed**. The allocation was returned with no retry; `local-slot-return.json` records each actual exit separately.
+
+The source-only follow-up `runtime-cancellation-repair/next-candidate/KotlinCoroutineSupport.swift` restores the forwarding getter's nonoptional result contract without casts, force unwraps, suppression or generated edits. Its hash is `b5597d8c475c7c470afb01b737051736dfc0b04ab06e849a0b9e2b719eeaa4f7`. It is uncompiled/unpackaged; the previous frozen candidate and actual generated failure output remain intact. Peer lifetime, cached-wrapper transfer and cancellation reentrancy obligations remain unproved. Run the same bounded audit/negative/fresh-generation/typecheck/all-thirteen sequence only after another allocation, with fresh manifests and output paths. This is not product integration, publication or toolchain adoption.
+
+### Pointer baseline diagnostic parser correction
+
+The separate `runtime-pointer-repair` run packaged source b5597d8c as experimental exporter SHA256 `b49fd36c8a0c7989db5a6a37b9ac91b8f117b1065afa02ca6399523772583877` in session18883; audit again found exactly one coroutine resource delta and zero class/add/remove changes. Baseline session31593 actual Swift6/Werror compiler exit1 reproduced the same three located optional-pointer errors at66:43,76:48,329:126. The original runner exited1 because it counted the three inline highlight renderings again. Raw log SHA256 `42dc07093a40d1e9d97f615b968b58ca4f3a466759fe3d03eb607cde143ff4f3` and original runner remain intact. Offline anchored source-location classification confirms three errors, with no additional family; the mismatch is a harness counter defect, not an inferred producer regression.
+
+No corrected embed or behavior test started in that allocation. The slot was returned. `run-pointer-regression-v2.rb` corrects only diagnostic counting; the fresh87-input continuation manifest is `494aec801d4b52dd52088705c8a6baf669bf6593ad58456d3c367ac69f1d2bdb`. The remaining requested allocation reuses the existing verified JAR and baseline evidence, runs one corrected embed, and only after module success pins fresh output, typechecks it and runs all thirteen cases. No baseline rerun, repack or successful candidate claim is implied.

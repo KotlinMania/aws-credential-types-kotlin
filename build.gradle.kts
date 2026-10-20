@@ -365,6 +365,18 @@ tasks
         dependsOn(ensureAndroidSdk)
     }
 
+// Generated bridge and runtime compilation uses the project warning policy.
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().configureEach {
+    compilerOptions.allWarningsAsErrors.set(true)
+    if (name.startsWith("compileSwiftExportMainKotlin")) {
+        // The generated coroutine runtime implements Job's opt-in inheritance contract.
+        compilerOptions.optIn.add("kotlinx.coroutines.InternalForInheritanceCoroutinesApi")
+    }
+    doFirst {
+        check(compilerOptions.allWarningsAsErrors.get()) { "Warnings-as-errors disabled for $path" }
+    }
+}
+
 val jvmToolchainVersion = providers.gradleProperty("jvm.toolchain").getOrElse("21").toInt()
 
 // ============================================================================
