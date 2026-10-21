@@ -1,43 +1,30 @@
 // port-lint: source provider/future.rs
 package io.github.kotlinmania.awscredentialtypes.provider.future
 
-import io.github.kotlinmania.awscredentialtypes.Credentials
-import io.github.kotlinmania.awscredentialtypes.provider.token.Result as TokenResult
+import io.github.kotlinmania.awscredentialtypes.provider.CredentialsResult
+import io.github.kotlinmania.awscredentialtypes.provider.token.TokenResult
 
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/**
- * Convenience `ProvideCredentials` struct that implements the `ProvideCredentials` trait.
- */
-
-/** Boxed asynchronous producer mirroring upstream `BoxFuture`. */
-typealias BoxFuture<T> = suspend () -> T
-
-/** Output type of [ProvideCredentials], mirroring upstream `Future::Output`. */
-typealias Output = Result<Credentials>
-
-/** Output type of [ProvideToken], mirroring upstream `Future::Output`. */
-typealias TokenOutput = TokenResult
-
 private sealed interface CredentialsState {
     data class Ready(
-        val value: Result<Credentials>,
+        val value: CredentialsResult,
     ) : CredentialsState
 
     class Pending(
-        val producer: suspend () -> Result<Credentials>,
+        val producer: suspend () -> CredentialsResult,
     ) : CredentialsState
 }
 
-/** Future new-type that `ProvideCredentials::provide_credentials` must return. */
+/** Future returned by a credentials provider. */
 class ProvideCredentials private constructor(
     private val state: CredentialsState,
 ) {
     /** Awaits the underlying credentials result. */
-    suspend fun await(): Result<Credentials> =
+    suspend fun await(): CredentialsResult =
         when (val s = state) {
             is CredentialsState.Ready -> s.value
             is CredentialsState.Pending -> s.producer()
@@ -48,17 +35,17 @@ class ProvideCredentials private constructor(
      *
      * In Kotlin coroutines, this delegates to [await].
      */
-    suspend fun poll(): Result<Credentials> = await()
+    suspend fun poll(): CredentialsResult = await()
 
     override fun toString(): String = "ProvideCredentials"
 
     companion object {
         /** Creates a `ProvideCredentials` struct from a future. */
-        fun new(future: suspend () -> Result<Credentials>): ProvideCredentials =
+        fun new(future: suspend () -> CredentialsResult): ProvideCredentials =
             ProvideCredentials(CredentialsState.Pending(future))
 
         /** Creates a `ProvideCredentials` struct from a resolved credentials value. */
-        fun ready(credentials: Result<Credentials>): ProvideCredentials =
+        fun ready(credentials: CredentialsResult): ProvideCredentials =
             ProvideCredentials(CredentialsState.Ready(credentials))
     }
 }
@@ -73,7 +60,7 @@ private sealed interface TokenState {
     ) : TokenState
 }
 
-/** Future new-type that `ProvideToken::provide_token` must return. */
+/** Future returned by a token provider. */
 class ProvideToken private constructor(
     private val state: TokenState,
 ) {

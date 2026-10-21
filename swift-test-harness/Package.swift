@@ -1,5 +1,8 @@
 // swift-tools-version: 6.0
 import PackageDescription
+import Foundation
+
+let exportBuildDirectory = ProcessInfo.processInfo.environment["KOTLINMANIA_SWIFT_EXPORT_BUILD"] ?? "../build"
 
 let package = Package(
     name: "SwiftTestHarness",
@@ -7,7 +10,7 @@ let package = Package(
         .macOS(.v15),
     ],
     dependencies: [
-        .package(name: "AwsCredentialTypes", path: "../build/SPMPackage/macosArm64/Debug")
+        .package(name: "AwsCredentialTypes", path: "\(exportBuildDirectory)/SPMPackage/macosArm64/Debug")
     ],
     targets: [
         .testTarget(
@@ -30,10 +33,11 @@ let package = Package(
                 // embed task runs with the macOS Xcode-style environment
                 // variables (see .github/workflows/swift.yml).
                 .unsafeFlags([
-                    "-L", "../build/swift-test",
+                    "-L", "\(exportBuildDirectory)/swift-test",
                     "-lAwsCredentialTypes",
                 ]),
             ]
         ),
-    ]
+    ],
+    swiftLanguageModes: [.v6]
 )

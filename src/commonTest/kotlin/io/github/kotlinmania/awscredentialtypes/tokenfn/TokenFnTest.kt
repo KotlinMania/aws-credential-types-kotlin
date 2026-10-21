@@ -2,25 +2,13 @@
 package io.github.kotlinmania.awscredentialtypes.tokenfn
 
 import io.github.kotlinmania.awscredentialtypes.Token
+import io.github.kotlinmania.awscredentialtypes.provider.token.TokenResult
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import io.github.kotlinmania.awscredentialtypes.provider.token.Result as TokenResult
-
-private fun <T> assertSendSync() {}
-
-private fun checkIsStrRef(input: String) {
-    assertEquals(input, input)
-}
 
 private fun testAsyncProvider(input: String): TokenResult =
-    Result.success(Token.new(input, null))
-
-fun credsAreSendSync() {
-    assertSendSync<Token>()
-    val token = Token.new("token", null)
-    assertEquals("token", token.token())
-}
+    TokenResult.success(Token.new(input, null))
 
 suspend fun provideTokenFnClosureCanBorrow() {
     val thingsToBorrow = listOf("one", "two")
@@ -29,7 +17,6 @@ suspend fun provideTokenFnClosureCanBorrow() {
     for (thing in thingsToBorrow) {
         val provider =
             provideTokenFn {
-                checkIsStrRef(thing)
                 testAsyncProvider(thing)
             }
         providers += provider
@@ -56,18 +43,7 @@ suspend fun provideTokenFnClosureCanBorrow() {
 }
 
 class TokenFnTest {
-    @Test
-    fun credsAreSendSync() {
-        io.github.kotlinmania.awscredentialtypes.tokenfn
-            .credsAreSendSync()
-    }
-
-    @Test
-    fun tokensAreSendSync() {
-        io.github.kotlinmania.awscredentialtypes.tokenfn
-            .credsAreSendSync()
-    }
-
+    // Upstream Send/Sync type bounds and borrowed-string checks have no Kotlin type-system equivalent.
     @Test
     fun provideTokenFnClosureCanBorrow() =
         runTest {

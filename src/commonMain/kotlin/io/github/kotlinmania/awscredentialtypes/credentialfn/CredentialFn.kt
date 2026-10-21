@@ -1,7 +1,7 @@
 // port-lint: source credential_fn.rs
 package io.github.kotlinmania.awscredentialtypes.credentialfn
 
-import io.github.kotlinmania.awscredentialtypes.Credentials
+import io.github.kotlinmania.awscredentialtypes.provider.CredentialsResult
 import io.github.kotlinmania.awscredentialtypes.provider.ProvideCredentials
 import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideCredentials as ProvideCredentialsFuture
 
@@ -17,40 +17,24 @@ import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideCredentia
 /**
  * A [ProvideCredentials] implemented by a closure.
  *
- * See [provideCredentialsFn] for more details (in `aws_credential_types::credential_fn`).
+ * See [provideCredentialsFn].
  */
 class ProvideCredentialsFn internal constructor(
-    private val f: suspend () -> Result<Credentials>,
+    private val f: suspend () -> CredentialsResult,
 ) : ProvideCredentials {
     override fun provideCredentials(): ProvideCredentialsFuture =
         ProvideCredentialsFuture.new { f() }
 
     override fun toString(): String = "ProvideCredentialsFn"
 
-    /** Formats the provider for debugging, mirroring upstream Debug::fmt. */
+    /** Formats the provider for debugging. */
     fun fmt(): String = toString()
 }
 
 /**
  * Returns a new credentials provider built with the given closure. This allows you
  * to create an [ProvideCredentials] implementation from an async block that returns
- * a result (matching `crate::provider::Result`).
- *
- * # Examples
- *
- * ```kotlin
- * // use aws_credential_types::Credentials
- * // use aws_credential_types::credential_fn::provide_credentials_fn
- * suspend fun loadCredentials(): Credentials {
- *     return Credentials.new("akid", "secret", null, null, "example")
- * }
- *
- * provideCredentialsFn {
- *     // Async process to retrieve credentials goes here
- *     val credentials = loadCredentials()
- *     Result.success(credentials)
- * }
- * ```
+ * a [CredentialsResult].
  */
-fun provideCredentialsFn(f: suspend () -> Result<Credentials>): ProvideCredentialsFn =
+fun provideCredentialsFn(f: suspend () -> CredentialsResult): ProvideCredentialsFn =
     ProvideCredentialsFn(f)

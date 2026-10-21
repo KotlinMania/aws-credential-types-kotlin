@@ -3,6 +3,7 @@ package io.github.kotlinmania.awscredentialtypes
 
 import io.github.kotlinmania.awscredentialtypes.attributes.AccountId
 import io.github.kotlinmania.awscredentialtypes.credentialfeature.AwsCredentialFeature
+import io.github.kotlinmania.awscredentialtypes.provider.CredentialsResult
 import io.github.kotlinmania.awscredentialtypes.provider.ProvideCredentials
 import io.github.kotlinmania.zeroize.Zeroize
 import io.github.kotlinmania.zeroize.ZeroizeOnDrop
@@ -33,7 +34,7 @@ class Credentials private constructor(
     ZeroizeOnDrop,
     AutoCloseable {
     override fun provideCredentials(): ProvideCredentialsFuture =
-        ProvideCredentialsFuture.ready(Result.success(this.clone()))
+        ProvideCredentialsFuture.ready(CredentialsResult.success(this.clone()))
 
     override fun zeroize() {
         inner.zeroize()
