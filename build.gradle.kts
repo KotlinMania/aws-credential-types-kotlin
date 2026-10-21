@@ -1534,7 +1534,11 @@ tasks.register("swiftExportSmokeTest") {
             }
         val swiftTestLog = swiftTestOutput.toString()
         println(swiftTestLog)
-        val swiftTestLogFile = layout.buildDirectory.file("reports/swift-test/swift-test.log").get().asFile
+        val swiftTestLogFile =
+            layout.buildDirectory
+                .file("reports/swift-test/swift-test.log")
+                .get()
+                .asFile
         swiftTestLogFile.parentFile.mkdirs()
         swiftTestLogFile.writeText(swiftTestLog)
         swiftTestResult.assertNormalExitValue()
@@ -1542,7 +1546,9 @@ tasks.register("swiftExportSmokeTest") {
             .exec {
                 commandLine(
                     "python3",
-                    layout.projectDirectory.file("verification/verify_swift_tests.py").asFile.absolutePath,
+                    layout.projectDirectory
+                        .file("verification/verify_swift_tests.py")
+                        .asFile.absolutePath,
                     swiftTestLogFile.absolutePath,
                 )
             }.assertNormalExitValue()
