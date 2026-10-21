@@ -1,7 +1,7 @@
-// port-lint: source lib.rs
 package io.github.kotlinmania.awscredentialtypes
 
 import io.github.kotlinmania.awscredentialtypes.provider.token.ProvideToken
+import io.github.kotlinmania.awscredentialtypes.provider.token.TokenResult
 import kotlin.time.Instant
 import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideToken as ProvideTokenFuture
 
@@ -9,16 +9,6 @@ import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideToken as 
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-/**
- * `aws-credential-types` provides types concerned with AWS SDK credentials including:
- * * Traits for credentials providers and for credentials caching
- * * An opaque struct representing credentials
- * * Concrete implementations of credentials caching
- *
- * Exposes modules `attributes`, `credential_feature`, `credential_fn`, `credentials_impl`, `provider`, and `token_fn`.
- * Re-exports `Credentials` and `CredentialsBuilder`.
- */
-
 /**
  * AWS Access Token
  *
@@ -51,7 +41,7 @@ class Token private constructor(
         )
 
     override fun provideToken(): ProvideTokenFuture =
-        ProvideTokenFuture.ready(Result.success(clone()))
+        ProvideTokenFuture.ready(TokenResult.success(clone()))
 
     override fun equals(other: Any?): Boolean =
         this === other ||
@@ -80,16 +70,3 @@ class Token private constructor(
         ): Token = Token(token, expiresAfter)
     }
 }
-
-// Tracking ledger for the upstream crate root:
-// - attributes module: io.github.kotlinmania.awscredentialtypes.attributes
-// - credential feature module: io.github.kotlinmania.awscredentialtypes.credentialfeature
-// - credential closure module: io.github.kotlinmania.awscredentialtypes.credentialfn
-// - credentials implementation: io.github.kotlinmania.awscredentialtypes
-// - provider module: io.github.kotlinmania.awscredentialtypes.provider
-// - token closure module: io.github.kotlinmania.awscredentialtypes.tokenfn
-//
-// Defining Kotlin locations:
-// - Credentials: io.github.kotlinmania.awscredentialtypes.Credentials
-// - CredentialsBuilder: io.github.kotlinmania.awscredentialtypes.CredentialsBuilder
-// - Token: io.github.kotlinmania.awscredentialtypes.Token

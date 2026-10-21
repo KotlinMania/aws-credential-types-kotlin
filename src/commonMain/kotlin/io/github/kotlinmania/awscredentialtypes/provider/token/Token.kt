@@ -3,6 +3,7 @@ package io.github.kotlinmania.awscredentialtypes.provider.token
 
 import io.github.kotlinmania.awscredentialtypes.Identity
 import io.github.kotlinmania.awscredentialtypes.Token
+import io.github.kotlinmania.awscredentialtypes.provider.error.TokenError
 import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideToken as ProvideTokenFuture
 
 /*
@@ -21,8 +22,61 @@ import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideToken as 
  * token providers in the SDK config.
  */
 
-/** Result type for token providers */
-typealias Result = kotlin.Result<Token>
+/** A token value or the original provider error. */
+class TokenResult private constructor(
+    val value: Token?,
+    val error: TokenError?,
+) {
+    val isSuccess: Boolean
+        get() = error == null
+
+    val isFailure: Boolean
+        get() = error != null
+
+    fun getOrNull(): Token? = value
+
+    fun exceptionOrNull(): TokenError? = error
+
+    fun getOrThrow(): Token {
+        val failure = error
+        if (failure != null) throw failure
+        return requireNotNull(value)
+    }
+
+    companion object {
+        fun success(value: Token): TokenResult = TokenResult(value, null)
+
+        fun failure(error: TokenError): TokenResult = TokenResult(null, error)
+    }
+}
+
+/** An identity value or the original provider error. */
+class TokenIdentityResult private constructor(
+    val value: Identity?,
+    val error: TokenError?,
+) {
+    val isSuccess: Boolean
+        get() = error == null
+
+    val isFailure: Boolean
+        get() = error != null
+
+    fun getOrNull(): Identity? = value
+
+    fun exceptionOrNull(): TokenError? = error
+
+    fun getOrThrow(): Identity {
+        val failure = error
+        if (failure != null) throw failure
+        return requireNotNull(value)
+    }
+
+    companion object {
+        fun success(value: Identity): TokenIdentityResult = TokenIdentityResult(value, null)
+
+        fun failure(error: TokenError): TokenIdentityResult = TokenIdentityResult(null, error)
+    }
+}
 
 /** Access Token Provider */
 interface ProvideToken {
@@ -30,11 +84,7 @@ interface ProvideToken {
     fun provideToken(): ProvideTokenFuture
 }
 
-/**
- * Access token provider wrapper that may be shared.
- *
- * Newtype wrapper around [ProvideToken] that implements `Clone` using an internal `Arc`.
- */
+/** Access token provider wrapper that shares its underlying provider. */
 class SharedTokenProvider(
     private val provider: ProvideToken,
 ) : ProvideToken {
@@ -45,9 +95,16 @@ class SharedTokenProvider(
 
     override fun provideToken(): ProvideTokenFuture = provider.provideToken()
 
-    /** Resolves the identity from this token provider, mirroring upstream ResolveIdentity. */
-    suspend fun resolveIdentity(): kotlin.Result<Identity> =
-        provideToken().await().map { it.toIdentity() }
+    /** Resolves the identity from this token provider. */
+    suspend fun resolveIdentity(): TokenIdentityResult {
+        val result = provideToken().await()
+        val failure = result.error
+        return if (failure != null) {
+            TokenIdentityResult.failure(failure)
+        } else {
+            TokenIdentityResult.success(result.getOrThrow().toIdentity())
+        }
+    }
 
     /** Returns the stable cache partition associated with this provider. */
     fun cachePartition(): Any = cachePartition
@@ -55,12 +112,7 @@ class SharedTokenProvider(
     override fun toString(): String = "SharedTokenProvider"
 
     companion object {
-        /**
-         * Create a new [SharedTokenProvider] from [ProvideToken].
-         *
-         * The given provider will be wrapped in an internal `Arc`. If your
-         * provider is already in an `Arc`, use `SharedTokenProvider::from(provider)` instead.
-         */
+        /** Creates a shared wrapper around the given provider. */
         fun new(provider: ProvideToken): SharedTokenProvider = SharedTokenProvider(provider)
 
         /** Creates a [SharedTokenProvider] from [ProvideToken]. */

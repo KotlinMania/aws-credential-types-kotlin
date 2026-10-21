@@ -2,12 +2,13 @@
 package io.github.kotlinmania.awscredentialtypes.credentialfn
 
 import io.github.kotlinmania.awscredentialtypes.Credentials
+import io.github.kotlinmania.awscredentialtypes.provider.CredentialsResult
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-private fun testAsyncProvider(input: String): Result<Credentials> =
-    Result.success(Credentials.create(input, input, null, null, "test"))
+private fun testAsyncProvider(input: String): CredentialsResult =
+    CredentialsResult.success(Credentials.create(input, input, null, null, "test"))
 
 suspend fun provideCredentialsFnClosureCanBorrow() {
     val thingsToBorrow = listOf("one", "two")

@@ -2,13 +2,13 @@
 package io.github.kotlinmania.awscredentialtypes.tokenfn
 
 import io.github.kotlinmania.awscredentialtypes.Token
+import io.github.kotlinmania.awscredentialtypes.provider.token.TokenResult
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import io.github.kotlinmania.awscredentialtypes.provider.token.Result as TokenResult
 
 private fun testAsyncProvider(input: String): TokenResult =
-    Result.success(Token.new(input, null))
+    TokenResult.success(Token.new(input, null))
 
 suspend fun provideTokenFnClosureCanBorrow() {
     val thingsToBorrow = listOf("one", "two")
