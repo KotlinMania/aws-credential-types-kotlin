@@ -93,7 +93,7 @@ jobs:
         run: |
           set -o pipefail
           swift test -v -Xswiftc -swift-version -Xswiftc 6 -Xswiftc -warnings-as-errors 2>&1 | tee swift-test.log
-          python3 -c 'import re; from pathlib import Path; assert re.search(r"Test run with [1-9]\d* tests?", Path("swift-test.log").read_text()), "No Swift Testing tests executed"'
+          python3 ../verification/verify_swift_tests.py swift-test.log
 
       - name: Upload Swift Export artifacts
         if: success() || failure()
@@ -104,5 +104,7 @@ jobs:
             build/swift-test/lib*.a
             build/swift-test/*.swiftmodule/
             build/SPMPackage/macosArm64/Debug/
+            swift-test-harness/swift-test.log
+            build/reports/swift-test/
           retention-days: 7
           if-no-files-found: warn

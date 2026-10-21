@@ -1534,10 +1534,18 @@ tasks.register("swiftExportSmokeTest") {
             }
         val swiftTestLog = swiftTestOutput.toString()
         println(swiftTestLog)
+        val swiftTestLogFile = layout.buildDirectory.file("reports/swift-test/swift-test.log").get().asFile
+        swiftTestLogFile.parentFile.mkdirs()
+        swiftTestLogFile.writeText(swiftTestLog)
         swiftTestResult.assertNormalExitValue()
-        if (!swiftTestLog.contains(Regex("""Test run with [1-9]\d* tests?"""))) {
-            throw GradleException("swift test ran no Swift Testing tests (toolchain: $developerDir)")
-        }
+        execOperations
+            .exec {
+                commandLine(
+                    "python3",
+                    layout.projectDirectory.file("verification/verify_swift_tests.py").asFile.absolutePath,
+                    swiftTestLogFile.absolutePath,
+                )
+            }.assertNormalExitValue()
     }
 }
 
