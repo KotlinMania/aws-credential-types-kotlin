@@ -9,6 +9,7 @@ import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideToken as 
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+
 /**
  * AWS Access Token
  *

@@ -2,8 +2,8 @@
 package io.github.kotlinmania.awscredentialtypes.tokenfn
 
 import io.github.kotlinmania.awscredentialtypes.provider.token.ProvideToken
-import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideToken as ProvideTokenFuture
 import io.github.kotlinmania.awscredentialtypes.provider.token.TokenResult
+import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideToken as ProvideTokenFuture
 
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
