@@ -26,6 +26,7 @@ class CredentialsResult private constructor(
 
     fun exceptionOrNull(): CredentialsError? = error
 
+    @Throws(CredentialsError::class)
     fun getOrThrow(): Credentials {
         val failure = error
         if (failure != null) throw failure
@@ -54,6 +55,7 @@ class CredentialsIdentityResult private constructor(
 
     fun exceptionOrNull(): CredentialsError? = error
 
+    @Throws(CredentialsError::class)
     fun getOrThrow(): Identity {
         val failure = error
         if (failure != null) throw failure

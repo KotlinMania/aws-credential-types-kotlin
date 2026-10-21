@@ -37,6 +37,7 @@ class TokenResult private constructor(
 
     fun exceptionOrNull(): TokenError? = error
 
+    @Throws(TokenError::class)
     fun getOrThrow(): Token {
         val failure = error
         if (failure != null) throw failure
@@ -65,6 +66,7 @@ class TokenIdentityResult private constructor(
 
     fun exceptionOrNull(): TokenError? = error
 
+    @Throws(TokenError::class)
     fun getOrThrow(): Identity {
         val failure = error
         if (failure != null) throw failure
