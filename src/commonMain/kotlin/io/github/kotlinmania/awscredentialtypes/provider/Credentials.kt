@@ -4,6 +4,7 @@ package io.github.kotlinmania.awscredentialtypes.provider
 import io.github.kotlinmania.awscredentialtypes.Credentials
 import io.github.kotlinmania.awscredentialtypes.Identity
 import io.github.kotlinmania.awscredentialtypes.provider.error.CredentialsError
+import io.github.kotlinmania.awscredentialtypes.provider.error.CredentialsException
 import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideCredentials as ProvideCredentialsFuture
 
 /*
@@ -26,10 +27,9 @@ class CredentialsResult private constructor(
 
     fun exceptionOrNull(): CredentialsError? = error
 
-    @Throws(CredentialsError::class)
     fun getOrThrow(): Credentials {
         val failure = error
-        if (failure != null) throw failure
+        if (failure != null) throw CredentialsException(failure)
         return requireNotNull(value)
     }
 
@@ -55,10 +55,9 @@ class CredentialsIdentityResult private constructor(
 
     fun exceptionOrNull(): CredentialsError? = error
 
-    @Throws(CredentialsError::class)
     fun getOrThrow(): Identity {
         val failure = error
-        if (failure != null) throw failure
+        if (failure != null) throw CredentialsException(failure)
         return requireNotNull(value)
     }
 

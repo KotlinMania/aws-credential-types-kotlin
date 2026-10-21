@@ -75,25 +75,10 @@ jobs:
       #     repo's `project.frameworkName` (the Swift Export module name).
       #   * Four `.swiftmodule/` directories: <Module>,
       #     KotlinRuntimeSupport, ExportedKotlinPackages, KotlinRuntime.
-      - name: Build Swift Export package
-        env:
-          BUILT_PRODUCTS_DIR: ${{ github.workspace }}/build/swift-test
-          TARGET_BUILD_DIR: ${{ github.workspace }}/build/swift-test
-          SDK_NAME: macosx
-          CONFIGURATION: Debug
-          ARCHS: arm64
-          FRAMEWORKS_FOLDER_PATH: Frameworks
-          MACOSX_DEPLOYMENT_TARGET: "15.0"
-          DEPLOYMENT_TARGET_SETTING_NAME: MACOSX_DEPLOYMENT_TARGET
-          XCODE_XCCONFIG_FILE: ${{ github.workspace }}/verification/strict-swift.xcconfig
-        run: ./gradlew embedSwiftExportForXcode --no-configuration-cache
-
-      - name: Run swift test against Kotlin-exported module
-        working-directory: swift-test-harness
-        run: |
-          set -o pipefail
-          swift test -v -Xswiftc -swift-version -Xswiftc 6 -Xswiftc -warnings-as-errors 2>&1 | tee swift-test.log
-          python3 ../verification/verify_swift_tests.py swift-test.log
+      # This targeted task owns the macOS ARM64 export and six strict Swift tests.
+      # Other platform tests run in their respective reusable workflows.
+      - name: Build and test Swift Export
+        run: ./gradlew swiftExportSmokeTest --no-daemon --max-workers=2 --no-configuration-cache --console=plain
 
       - name: Upload Swift Export artifacts
         if: success() || failure()
@@ -101,10 +86,13 @@ jobs:
         with:
           name: swift-export-artifacts
           path: |
+            build/reports/swift-tests.log
+            build/reports/swift-tests.json
+            build/reports/native-cache/
+            build/swift-tooling/verified-worker.json
+            build/swift-tooling/sdk-audit.json
             build/swift-test/lib*.a
             build/swift-test/*.swiftmodule/
             build/SPMPackage/macosArm64/Debug/
-            swift-test-harness/swift-test.log
-            build/reports/swift-test/
           retention-days: 7
           if-no-files-found: warn

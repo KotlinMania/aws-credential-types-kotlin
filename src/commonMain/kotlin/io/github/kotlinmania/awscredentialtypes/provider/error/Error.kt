@@ -12,7 +12,7 @@ import kotlin.time.Duration
 
 /** Details for [CredentialsError.CredentialsNotLoaded] */
 class CredentialsNotLoadedDetails internal constructor(
-    internal val source: Throwable?,
+    internal val source: Any?,
 ) {
     override fun toString(): String = "CredentialsNotLoaded(source=$source)"
 }
@@ -29,30 +29,35 @@ class ProviderTimedOutDetails internal constructor(
 
 /** Details for [CredentialsError.InvalidConfiguration] or [TokenError.InvalidConfiguration] */
 class InvalidConfigurationDetails internal constructor(
-    internal val source: Throwable,
+    internal val source: Any,
 ) {
     override fun toString(): String = "InvalidConfiguration(source=$source)"
 }
 
 /** Details for [CredentialsError.ProviderError] or [TokenError.ProviderError] */
 class ProviderErrorDetails internal constructor(
-    internal val source: Throwable,
+    internal val source: Any,
 ) {
     override fun toString(): String = "ProviderError(source=$source)"
 }
 
 /** Details for [CredentialsError.Unhandled] or [TokenError.Unhandled] */
 class UnhandledDetails internal constructor(
-    internal val source: Throwable,
+    internal val source: Any,
 ) {
     override fun toString(): String = "Unhandled(source=$source)"
 }
 
+/** Exception thrown when credential resolution fails and is unwrapped via `getOrThrow`. */
+internal class CredentialsException(
+    val error: CredentialsError,
+) : RuntimeException(error.message, error.cause as? Throwable)
+
 /** Error returned when credentials failed to load. */
 sealed class CredentialsError(
-    message: String,
-    cause: Throwable?,
-) : Throwable(message, cause) {
+    val message: String,
+    val cause: Any?,
+) {
     /** No credentials were available for this provider */
     class CredentialsNotLoaded internal constructor(
         val details: CredentialsNotLoadedDetails,
@@ -101,7 +106,9 @@ sealed class CredentialsError(
     ) : CredentialsError("unexpected credentials error", details.source)
 
     /** Returns the underlying cause of this error, mirroring upstream `Error::source`. */
-    fun source(): Throwable? = cause
+    fun source(): Any? = cause
+
+    override fun toString(): String = message
 
     companion object {
         /**
@@ -111,7 +118,7 @@ sealed class CredentialsError(
          * This contrasts with [invalidConfiguration], indicating that the provider was configured
          * in some way, but certain settings were invalid.
          */
-        fun notLoaded(source: Throwable): CredentialsError =
+        fun notLoaded(source: Any): CredentialsError =
             CredentialsNotLoaded(CredentialsNotLoadedDetails(source))
 
         /**
@@ -130,7 +137,7 @@ sealed class CredentialsError(
          * Unhandled errors should not occur during normal operation and should be reserved for
          * exceptional cases, such as a JSON API returning an output that was not parseable as JSON.
          */
-        fun unhandled(source: Throwable): CredentialsError =
+        fun unhandled(source: Any): CredentialsError =
             Unhandled(UnhandledDetails(source))
 
         /**
@@ -139,11 +146,11 @@ sealed class CredentialsError(
          * Provider errors may occur during normal use of a credentials provider, e.g. a 503 when
          * retrieving credentials from IMDS.
          */
-        fun providerError(source: Throwable): CredentialsError =
+        fun providerError(source: Any): CredentialsError =
             ProviderError(ProviderErrorDetails(source))
 
         /** The provided configuration for a provider was invalid */
-        fun invalidConfiguration(source: Throwable): CredentialsError =
+        fun invalidConfiguration(source: Any): CredentialsError =
             InvalidConfiguration(InvalidConfigurationDetails(source))
 
         /** The credentials provider did not provide credentials within an allotted duration */
@@ -154,16 +161,21 @@ sealed class CredentialsError(
 
 /** Details for [TokenError.TokenNotLoaded] */
 class TokenNotLoadedDetails internal constructor(
-    internal val source: Throwable,
+    internal val source: Any,
 ) {
     override fun toString(): String = "TokenNotLoaded(source=$source)"
 }
 
+/** Exception thrown when token resolution fails and is unwrapped via `getOrThrow`. */
+internal class TokenException(
+    val error: TokenError,
+) : RuntimeException(error.message, error.cause as? Throwable)
+
 /** Error returned when an access token provider fails to provide an access token. */
 sealed class TokenError(
-    message: String,
-    cause: Throwable?,
-) : Throwable(message, cause) {
+    val message: String,
+    val cause: Any?,
+) {
     /** This provider couldn't provide a token. */
     class TokenNotLoaded internal constructor(
         val details: TokenNotLoadedDetails,
@@ -205,7 +217,9 @@ sealed class TokenError(
     ) : TokenError("unexpected access token providererror", details.source)
 
     /** Returns the underlying cause of this error, mirroring upstream `Error::source`. */
-    fun source(): Throwable? = cause
+    fun source(): Any? = cause
+
+    override fun toString(): String = message
 
     companion object {
         /**
@@ -215,7 +229,7 @@ sealed class TokenError(
          * This contrasts with [invalidConfiguration], indicating that the provider was configured
          * in some way, but certain settings were invalid.
          */
-        fun notLoaded(source: Throwable): TokenError =
+        fun notLoaded(source: Any): TokenError =
             TokenNotLoaded(TokenNotLoadedDetails(source))
 
         /**
@@ -224,15 +238,15 @@ sealed class TokenError(
          * Unhandled errors should not occur during normal operation and should be reserved for
          * exceptional cases, such as a JSON API returning an output that was not parseable as JSON.
          */
-        fun unhandled(source: Throwable): TokenError =
+        fun unhandled(source: Any): TokenError =
             Unhandled(UnhandledDetails(source))
 
         /** The access token provider returned an error. */
-        fun providerError(source: Throwable): TokenError =
+        fun providerError(source: Any): TokenError =
             ProviderError(ProviderErrorDetails(source))
 
         /** The provided configuration for a provider was invalid. */
-        fun invalidConfiguration(source: Throwable): TokenError =
+        fun invalidConfiguration(source: Any): TokenError =
             InvalidConfiguration(InvalidConfigurationDetails(source))
 
         /** The access token provider did not provide a token within an allotted amount of time. */

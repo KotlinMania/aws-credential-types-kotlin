@@ -4,6 +4,7 @@ package io.github.kotlinmania.awscredentialtypes.provider.token
 import io.github.kotlinmania.awscredentialtypes.Identity
 import io.github.kotlinmania.awscredentialtypes.Token
 import io.github.kotlinmania.awscredentialtypes.provider.error.TokenError
+import io.github.kotlinmania.awscredentialtypes.provider.error.TokenException
 import io.github.kotlinmania.awscredentialtypes.provider.future.ProvideToken as ProvideTokenFuture
 
 /*
@@ -37,10 +38,9 @@ class TokenResult private constructor(
 
     fun exceptionOrNull(): TokenError? = error
 
-    @Throws(TokenError::class)
     fun getOrThrow(): Token {
         val failure = error
-        if (failure != null) throw failure
+        if (failure != null) throw TokenException(failure)
         return requireNotNull(value)
     }
 
@@ -66,10 +66,9 @@ class TokenIdentityResult private constructor(
 
     fun exceptionOrNull(): TokenError? = error
 
-    @Throws(TokenError::class)
     fun getOrThrow(): Identity {
         val failure = error
-        if (failure != null) throw failure
+        if (failure != null) throw TokenException(failure)
         return requireNotNull(value)
     }
 

@@ -4,7 +4,9 @@ import io.github.kotlinmania.awscredentialtypes.Credentials
 import io.github.kotlinmania.awscredentialtypes.Token
 import io.github.kotlinmania.awscredentialtypes.credentialfn.provideCredentialsFn
 import io.github.kotlinmania.awscredentialtypes.provider.error.CredentialsError
+import io.github.kotlinmania.awscredentialtypes.provider.error.CredentialsException
 import io.github.kotlinmania.awscredentialtypes.provider.error.TokenError
+import io.github.kotlinmania.awscredentialtypes.provider.error.TokenException
 import io.github.kotlinmania.awscredentialtypes.provider.token.SharedTokenProvider
 import io.github.kotlinmania.awscredentialtypes.provider.token.TokenIdentityResult
 import io.github.kotlinmania.awscredentialtypes.provider.token.TokenResult
@@ -66,7 +68,7 @@ class ProviderResultTest {
             assertNull(result.getOrNull())
             assertSame(error, result.error)
             assertSame(error, result.exceptionOrNull())
-            assertSame(error, assertFails { result.getOrThrow() })
+            assertSame(error, assertIs<CredentialsException>(assertFails { result.getOrThrow() }).error)
             assertSame(source, error.source())
             assertEquals(42, assertIs<DiagnosticFailure>(error.source()).code)
             assertSame(root, source.cause)
@@ -88,7 +90,7 @@ class ProviderResultTest {
             assertNull(result.getOrNull())
             assertSame(error, result.error)
             assertSame(error, result.exceptionOrNull())
-            assertSame(error, assertFails { result.getOrThrow() })
+            assertSame(error, assertIs<TokenException>(assertFails { result.getOrThrow() }).error)
             assertSame(source, error.source())
             assertEquals(52, assertIs<DiagnosticFailure>(error.source()).code)
             assertSame(root, source.cause)
@@ -146,7 +148,7 @@ class ProviderResultTest {
             assertNull(result.getOrNull())
             assertSame(error, result.error)
             assertSame(error, result.exceptionOrNull())
-            assertSame(error, assertFails { result.getOrThrow() })
+            assertSame(error, assertIs<CredentialsException>(assertFails { result.getOrThrow() }).error)
             assertIs<CredentialsError.CredentialsNotLoaded>(result.error)
             assertSame(source, requireNotNull(result.error).source())
         }
@@ -164,7 +166,7 @@ class ProviderResultTest {
             assertNull(result.getOrNull())
             assertSame(error, result.error)
             assertSame(error, result.exceptionOrNull())
-            assertSame(error, assertFails { result.getOrThrow() })
+            assertSame(error, assertIs<TokenException>(assertFails { result.getOrThrow() }).error)
             assertIs<TokenError.Unhandled>(result.error)
             assertSame(source, requireNotNull(result.error).source())
         }
