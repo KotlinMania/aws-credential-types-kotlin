@@ -45,4 +45,3 @@ def tokens(text):
             result.append((match[0], i, i + len(match[0])))
             i += len(match[0])
     return result
-
